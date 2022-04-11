@@ -28,7 +28,10 @@ def FitLeakage(mnvplotter,data_hist,nue_hist,mc_hist):
         hist.GetXaxis().SetRangeUser(0,100)
         m = hist.GetMean()
         err = hist.GetMeanError()
-        return "{} mean: {:.2f}\pm{:.2f}".format(name,m,err)
+        hist.GetXaxis().SetRangeUser(0,500)
+        return "{} mean: {:.2f}#pm{:.2f}".format(name,m,err)
+    data_hist.GetYaxis().SetTitle("NEvents") 
+    mc_hist.GetYaxis().SetTitle("NEvents") 
     mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,1.0,"TR")
     size = 0.05
     align = ctypes.c_int(1)
@@ -53,7 +56,10 @@ def FitLeakage(mnvplotter,data_hist,nue_hist,mc_hist):
     s = getMeanStr(mc_hist,"MC")
     mnvplotter.AddPlotLabel(s,xLabel.value,yLabel.value-0.05,size,4,112,align.value)
     nue_hist.Draw("HIST SAME")
-    s =  getMeanStr(nue_hist,"nu+e")
+    leg = PlotTools.GetTLegend(ROOT.gPad)
+    leg.AddEntry(nue_hist,"#nu+e")
+    leg.Draw()
+    s =  getMeanStr(nue_hist,"#nu+e")
     mnvplotter.AddPlotLabel(s,xLabel.value,yLabel.value-0.1,size,4,112,align.value)
     
 

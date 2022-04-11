@@ -15,8 +15,8 @@ nuesignalrichfile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_BigNuE1_electr
 nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_electron_MAD.root"
 nuedatafile = "/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_electron_MAD.root"
 numuweightedfile =  {
-    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_muon_true_weighted_MAD.root",
-    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_muon_weighted_MAD.root"
+    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_muon_MAD.root",
+    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_muon_MAD.root"
 }
 
 MU_SIGNALS = ["CCQE","CCDelta","CC2p2h","CCDIS","CCOther"]
@@ -321,6 +321,6 @@ def MakeCompPlot():
 
 
 if __name__ == "__main__":
-    #MakeCompPlot()
+    MakeCompPlot()
     #MakeScaleFile(["Enu","tEnu","tEnu_true_signal"])
-    MakeScaleFile2()
+    #MakeScaleFile2()

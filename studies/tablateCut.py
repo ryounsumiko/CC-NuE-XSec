@@ -11,7 +11,7 @@ from config.AnalysisConfig import AnalysisConfig
 from config.DrawingConfig import PLOTS_TO_MAKE,Default_Plot_Type,Default_Scale,DefaultPlotters
 from tools import Utilities,PlotTools
 from tools.PlotLibrary import HistHolder
-from config.CutConfig import SAMPLE_CUTS
+from config.CutConfig import SAMPLE_CUTS,KINEMATICS_CUTS
 
 config = {
     "variables": ["W"]
@@ -54,13 +54,13 @@ if __name__ == "__main__":
     #     #print("fraction of data remaining: {}, relative efficiency: {}, fractional backround remaining: {}".format(cutted_data/total_data,cutted_signal/total_signal,cutted_bkg/total_bkg))
     #     #print("metric: eff*pur: {}".format(cutted_signal/total_signal*cutted_signal/(cutted_bkg+cutted_signal)))
     #     print(("{} & {:.2f} & {:.2f} & {:.2f} & {:.4f}\\\\".format(0.1*i,cutted_signal/total_signal,cutted_bkg/total_bkg,cutted_signal/(cutted_bkg+cutted_signal),cutted_signal/total_signal*cutted_signal/(cutted_bkg+cutted_signal))))
-
-    data_tree =ROOT.RDataFrame("cut_stat",data_file)
     mc_tree =ROOT.RDataFrame("cut_stat",mc_file)
-    if not data_tree:
+    try:
+        data_tree =ROOT.RDataFrame("cut_stat",data_file)
+    except:
         data_tree=mc_tree
     cut_stat = {}
-    for cut in SAMPLE_CUTS["Signal"]:
+    for cut in SAMPLE_CUTS["Signal"]+["Reco{}".format(c) for c in KINEMATICS_CUTS]:
         cut_stat[cut] = (data_tree.Sum("{}_{}".format(cut,"selected")).GetValue(),
                               mc_tree.Sum("{}_{}".format(cut,"selected")).GetValue(),
                               mc_tree.Sum("{}_{}".format(cut,"signal")).GetValue())

@@ -8,6 +8,7 @@ baseDir = os.path.dirname(os.path.abspath(__file__))+"/../"
 MacroName = baseDir.split("/")[-4]
 MAT = os.environ["PLOTUTILSROOT"].split("/")[-2]
 CONFIG=os.environ["PYTHONPATH"].split(":")[0].split("/")[-1]
+THRESHOLD=None
 print(CONFIG)
 
 def createTarball(outDir):
@@ -61,8 +62,10 @@ def addBashLine( wrapper , command ):
   wrapper.write("%s\n" % command)
   wrapper.write("echo '---------------'\n")
 
-def GridJobsProtection(threshold=200):
-    cmd = "jobsub_q --user hsu -G minerva | grep fnal.gov | wc -l"
+def GridJobsProtection(threshold=None):
+    if not threshold:
+        return False
+    cmd = "jobsub_q --constraint '(JobStatus=?=1)&&(Owner=?=\"hsu\")' -G minerva | grep fnal.gov | wc -l"
     njobs = int(subprocess.run(cmd,stdout=subprocess.PIPE,shell=True).stdout.decode('utf-8'))
     return njobs>threshold
 
@@ -135,7 +138,7 @@ if __name__ == '__main__':
   createTarball(outdir_tarball)
 
   for playlist in gridargs.playlists:
-    while GridJobsProtection():
+    while GridJobsProtection(THRESHOLD):
         print("Too much job submitted, sleep 10min.")
         time.sleep(60*10)
 

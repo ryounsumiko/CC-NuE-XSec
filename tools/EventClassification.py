@@ -69,7 +69,8 @@ class EventClassifier(object):
 
         self.counter = [0,0]
         self.signal_cuts = SAMPLE_CUTS["Signal"]
-        self.signal_cuts.extend(["Reco{}".format(cut_name) for cut_name in KINEMATICS_CUTS])
+        if self.use_kin_cuts:
+            self.signal_cuts.extend(["Reco{}".format(cut_name) for cut_name in KINEMATICS_CUTS])
         self.cut_stats = {
             "selected":dict.fromkeys(self.signal_cuts,0),
             "signal":dict.fromkeys(self.signal_cuts,0),

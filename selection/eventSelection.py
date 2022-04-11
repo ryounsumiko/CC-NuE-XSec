@@ -98,6 +98,8 @@ def plotTruthKin(chainwrapper,outfile):
 
         for universe in chain.from_iterable(iter(universes.values())):
             universe.SetEntry(counter)
+            if mc and AnalysisConfig.skip_2p2h and universe.mc_intType==8:
+                continue
 
             #only no lateral shifts in truth quantity
             if universe.ShortName()=="cv":
