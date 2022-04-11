@@ -992,5 +992,137 @@
                 "playlist_location": "file_option/playlist_ccqenue_mcme1N_ext_2p2h_MAD.txt"
             }
         }
+    },
+    "me5A_nx": {
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame5A_nx_MAD.txt"
+            }
+        },
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme5A_nx_MAD.txt"
+            }
+        }
+    },
+    "me6A_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6A_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6A_nx_MAD.txt"
+            }
+        }
+    },
+    "me6B_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6B_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6B_nx_MAD.txt"
+            }
+        }
+    },
+    "me6C_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6C_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6C_nx_MAD.txt"
+            }
+        }
+    },
+    "me6D_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6D_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6D_nx_MAD.txt"
+            }
+        }
+    },
+    "me6E_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6E_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6E_nx_MAD.txt"
+            }
+        }
+    },
+    "me6F_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6F_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6F_nx_MAD.txt"
+            }
+        }
+    },
+    "me6G_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6G_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6G_nx_MAD.txt"
+            }
+        }
+    },
+    "me6H_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6H_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6H_nx_MAD.txt"
+            }
+        }
+    },
+    "me6I_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6I_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6I_nx_MAD.txt"
+            }
+        }
+    },
+    "me6J_nx": {
+        "mc": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme6J_nx_MAD.txt"
+            }
+        },
+        "data": {
+            "MAD": {
+                "playlist_location": "file_option/playlist_ccqenue_datame6J_nx_MAD.txt"
+            }
+        }
     }
 }

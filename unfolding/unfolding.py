@@ -11,7 +11,7 @@ from config.BackgroundFitConfig import CATEGORY_FACTORS
 from config.SignalDef import SIGNAL_DEFINATION
 from config import DrawingConfig
 from tools import Utilities,PlotTools
-from config.UnfoldingConfig import HISTOGRAMS_TO_UNFOLD,REGULATION_PARAMETER
+from config.UnfoldingConfig import HISTOGRAMS_TO_UNFOLD,REGULATION_PARAMETERS
 from config.DrawingConfig import Default_Plot_Type,Default_Scale,DefaultPlotters,DefaultSlicer
 from tools.unfoldingwrapper import DeOverflowWrapper,WithBackgroundWrapper,IdentityWrapper
 from config.SystematicsConfig import CONSOLIDATED_ERROR_GROUPS,DETAILED_ERROR_GROUPS
@@ -23,7 +23,7 @@ USE_BIGNUE=True
 def SubtractPoissonHistograms(h,h1,pseudo_data=False):
     if pseudo_data:
         h.ClearAllErrorBands ()
-    h.AddMissingErrorBandsAndFillWithCV (h1)
+    h.AddMissingErrorBandsAndFillWithCV(h1)
     errors = []
     for i in range(h.GetSize()):
         errors.append(math.sqrt(h.GetBinError(i)**2 + h1.GetBinError(i)**2))
@@ -93,7 +93,7 @@ def unfolding(hist_to_unfold,migration,mc_reco,true_signal,mc_truth):
     hist_to_unfold.AddMissingErrorBandsAndFillWithCV(mc_reco)
     data = hist_to_unfold.Clone()
     unfolded3 = true_signal.Clone()
-    MNVUNFOLD.UnfoldHistoWithFakes(unfolded3,cov,migration,data,mc_reco,ROOT.nullptr,ROOT.nullptr,REGULATION_PARAMETER,True,True)
+    MNVUNFOLD.UnfoldHistoWithFakes(unfolded3,cov,migration,data,mc_reco,ROOT.nullptr,ROOT.nullptr,REGULATION_PARAMETERS[plot],True,True)
     return unfolded3
 
 def DrawPostUnfolding(data_hist1,data_hist2):

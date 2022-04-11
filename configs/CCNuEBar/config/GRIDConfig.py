@@ -18,23 +18,11 @@ PLAYLISTS = {
     ],
 
     "RHC": [
-        "me5A_nx",
-        "me6A_nx",
-        "me6B_nx",
-        "me6C_nx",
-        "me6D_nx",
-        "me6E_nx",
-        "me6F_nx",
-        "me6G_nx",
-        "me6H_nx",
-        "me6I_nx",
-        "me6J_nx",
+        "Minerva5",
     ],
 
 }
 PLAYLISTS["FHC_BigNuE"] = list(map(lambda x:x.replace("nx","BigNuE"),PLAYLISTS["FHC"]))
-PLAYLISTS["RHC_BigNuE"] = list(map(lambda x:x.replace("nx","BigNuE"),PLAYLISTS["RHC"]))
-
 PLAYLISTS["FHC_NCDIF"] = list(map(lambda x:x.replace("nx","NCDIF"),PLAYLISTS["FHC"]))
 PLAYLISTS["FHC_Extended_2p2h"] = list(map(lambda x:x.replace("nx","ext_2p2h"),PLAYLISTS["FHC"]))
 

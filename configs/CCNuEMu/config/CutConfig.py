@@ -57,8 +57,8 @@ FIDUCIAL_Z_RANGE = [5980,8422]
 ELECTRON_ENERGY_RANGE = [2, 20] # in GeV
 NEUTRINO_ENERGY_RANGE = [0, 100] # in GeV.
 ELECTRON_ANGLE_RANGE = [0, 20] # in deg
-RECO_Q3_RANGE = [0,4]
-TRUE_Q3_RANGE = [0,4]
+RECO_Q3_RANGE = [0,1.2]
+TRUE_Q3_RANGE = [0,1.2]
 
 WEXP_CUT = 2
 Reco_visEcut = 2
@@ -202,7 +202,7 @@ KINEMATICS_CUTS = [
     "LeptonEnergy",
     "LeptonAngle",
     #"NeutrinoEnergy",
-    #"Q3"
+    "Q3"
 ]
 #######################################
 

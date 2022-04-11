@@ -34,12 +34,12 @@ BEAM_ANGLE = math.radians(-3.3)
 BEAM_XANGLE_UNCERTAINTY = 1*1e-3 #radians
 BEAM_YANGLE_UNCERTAINTY = 0.9*1e-3
 
-#LEAKAGE_CORRECTION = lambda E: 0.008*E
-LEAKAGE_CORRECTION = lambda E: 0
+LEAKAGE_CORRECTION = lambda E: 0.008*E
+#LEAKAGE_CORRECTION = lambda E: 0
 AVAILABLE_E_CORRECTION = 1.17
 
 LEAKAGE_SYSTEMATICS = 2 # MeV
-LEAKAGE_BIAS = 0#5#MeV
+LEAKAGE_BIAS = 5#MeV
 
 # electron angle uncertainty
 ELECTRON_ANGLE_UNCERTAINTY = 1e-3 # this is muon angular resolution. I am worry about this.
@@ -103,8 +103,8 @@ RPA_UNIVERSES = {
 }
 
 NonResPi=True
-LowQ2PiWeightChannel = "Joint"
-LowQ2PiWeightSysChannel = ["NUPI0"]
+LowQ2PiWeightChannel = None
+LowQ2PiWeightSysChannel = ["Joint","NUPI0"]
 NumZExpansionUniverses = 0 #Means Don't use Zexpansion. 100 is default Z expansion
 
 RESPONSE_BRANCHES = [

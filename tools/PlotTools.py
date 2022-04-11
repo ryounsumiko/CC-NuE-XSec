@@ -63,6 +63,14 @@ def ProjectionX(hist):
 def ProjectionY(hist):
     return [hist.ProjectionY()]
 
+def Ratio(hists,denominator=None,option=""):
+    if denominator is None:
+        denominator = hists[0]
+    for i in range(len(hists)):
+        hists[i].Divide(hists[i],denominator,1,1,option)
+    return hists
+        
+
 def PrepareSignalDecompose(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_data = False,only_cated = False):
     def ReSumHists(h_list):
         if len(h_list) == 0:
@@ -96,39 +104,31 @@ def PrepareSignalDecompose(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_da
     return plotfunction,hists
 
 
-def PrepareSignalDecomposeRatio(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_data = False,only_cated = False):
-    def ReSumHists(h_list):
-        if len(h_list) == 0:
-            return None
-        hnew = h_list[0].Clone()
-        for i in range(1,len(h_list)):
-            hnew.Add(h_list[i])
-        return hnew
 
-    if (data_hists.valid and mc_hists.valid):
-        hists = [data_hists.GetHist().GetCVHistoWithError() if sys_on_data else data_hists.GetHist().GetCVHistoWithStatError()]
-        cate_hists,colors,titles  = mc_hists.GetCateList(cates)
-        if only_cated :
-            totalHist = ReSumHists(cate_hists)
-        else:
-            totalHist = mc_hists.GetHist()
-        hists.append(totalHist.GetCVHistoWithError() if sys_on_mc else totalHist.GetCVHistoWithStatError())
-        hists.extend(cate_hists)
-        plotfunction = lambda mnvplotter,data_hist, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles)(data_hist,mc_hist,mc_ints)
-    elif mc_hists.valid:
-        cate_hists,colors,titles  = mc_hists.GetCateList(cates)
-        if only_cated :
-            totalHist = ReSumHists(cate_hists)
-        else:
-            totalHist = mc_hists.GetHist()
-        hists = [totalHist.GetCVHistoWithError() if sys_on_mc else totalHist.GetCVHistoWithStatError()]
-        hists.extend(cate_hists)
-        plotfunction = lambda mnvplotter, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles)(None,mc_hist,mc_ints)
-    else:
-        raise KeyError("Non sense making signal decomposition plots without mc")
-    for i in hists:
-        i.Divide(i,mc_hists.GetHist())
-    return plotfunction,hists
+# def PrepareModelComparison(data_hists,mc_hists,models,band_on_mc = True):
+#     if (data_hists,valid and mc_hists.valid):
+#         data_hist = data_hists.GetHist()
+#         mc_hist = mc_hists.GetHist()
+#         _cate = []
+#         _mc_models = []
+#         _colors = []
+#         for k,v in models.items():
+#             _cate.append(k)
+#             _colors.append(v["color"])
+#             htmp = mc_hist if band_on_mc else data_hist
+#             if v["errorband"][0]:
+#                 try:
+#                     _mc_models.append(PlotUtils.MnvH2D(htmp.GetVertErrorBand(v["errorband"][0]).GetHist(v["errorband"][1])))
+#                 except ReferenceError:
+#                     continue
+#             else:
+#                 _mc_models.append(htmp)
+#         plotfunction =  lambda mnvplotter,data_hist, *mc_ints : partial(PlotTools.MakeModelVariantPlot,color=_colors,title=_cate)(data_hist, mc_ints)
+#         hists =[data_hists,*_mc_models]
+#     else:
+#         raise KeyError("Must have both data and MC for model comparison for now")
+#     return plotfunctions,hists
+
 
 def PrepareComp(data_hists,mc_hists,sys_on_mc = True, sys_on_data = False,as_frac=False):
     if not (data_hists.valid or mc_hists.valid):
@@ -268,7 +268,7 @@ def Make2DSlice(hist2D_o, X_slice=False, bin_start = 1 , bin_end = 0,interval = 
     start = max(0,bin_start)
     end = Nbins - bin_end + 1 if bin_end <=0 else bin_end
     for i in range(start,end,interval):
-        slicing_hists.append(hist2D.ProjectionX(hist2D.GetName()+str(i),i,i+interval-1,"o") if not X_slice else hist2D.ProjectionY(hist2D.GetName()+str(i),i,i+interval-1,"o"))
+        slicing_hists.append(hist2D.ProjectionX(hist2D.GetName()+str(i),i,i+interval-1,"oe") if not X_slice else hist2D.ProjectionY(hist2D.GetName()+str(i),i,i+interval-1,"oe"))
         slicing_hists[-1].SetTitle("%.1f<%s<%.1f"%(axis.GetBinLowEdge(i),axis.GetTitle(),axis.GetBinUpEdge(i+interval-1)))
         slicing_hists[-1].GetYaxis().SetTitle(hist2D.GetZaxis().GetTitle())
 
@@ -287,7 +287,7 @@ def MakeDataMCPlot(data_hist, mc_hist, pot_scale=1.0, sys_on_mc = True, sys_on_d
     else:
         local_data.Draw("E1X0")
 
-def MakeModelVariantPlot(data_hist, mc_hists, color=None, title=None,lenged ="TR",pot_scale=1.0,mnvplotter=MNVPLOTTER,canvas=CANVAS):
+def MakeModelVariantPlot(data_hist, mc_hists, color=None, title=None,legend ="TR",pot_scale=1.0,mnvplotter=MNVPLOTTER,canvas=CANVAS):
     if not mc_hists:
         raise KeyError("Doesn't make sense to plot model variation without MC")
     TArray = ROOT.TObjArray()
@@ -297,7 +297,8 @@ def MakeModelVariantPlot(data_hist, mc_hists, color=None, title=None,lenged ="TR
         if title:
             mc_hists[i].SetTitle(title[i])
         TArray.Add(mc_hists[i])
-    mnvplotter.DrawDataMCVariations(data_hist,TArray,pot_scale,lenged,True,True,False,False,False)
+    mnvplotter.DrawDataMCVariations(data_hist,TArray,pot_scale,legend,True,True,False,False,False)
+
 
 
 # def MakeDataMCStackedPlot(data_hist, mc_hists, legend = "TR", pot_scale=1.0, mnvplotter=MNVPLOTTER,canvas=CANVAS):
@@ -349,16 +350,16 @@ def MakeErrorBandPlot(hist,name,mnvplotter=MNVPLOTTER,canvas=CANVAS):
 def MakeGridPlot(MakingSlice,MakingEachPlot,input_hists,CanvasConfig=lambda canvas:True, draw_seperate_legend = False, mnvplotter=MNVPLOTTER,canvas=CANVAS,outname=None):
     if canvas is CANVAS:
         canvas.Clear()
+        canvas.SetLeftMargin(0)
     slices = list(map(lambda *args: args, *list(map(MakingSlice,input_hists))))
     N_plots = len(slices)
-    canvas.Divide(*CalMXN(N_plots+int(draw_seperate_legend)))
+    canvas.Divide(*CalMXN(N_plots+int(draw_seperate_legend)),0,0)
     for i in range(N_plots):
         canvas.cd(i+1)
         tcanvas = canvas.GetPad(i+1)
         if not CanvasConfig(tcanvas):
             print("Warning: failed setting canvas.")
-        if N_plots>1:
-            SetMargin(tcanvas)
+        SetMargin(tcanvas)
         MakingEachPlot(mnvplotter,*slices[i])
         mnvplotter.AddHistoTitle(slices[i][0].GetTitle())
         #code.interact(local=locals())
@@ -368,24 +369,23 @@ def MakeGridPlot(MakingSlice,MakingEachPlot,input_hists,CanvasConfig=lambda canv
             Tleg = GetTLegend(canvas.GetPad(i+1)) or Tleg
         if Tleg:
             canvas.cd(N_plots+1)
-            Tleg.SetX1(0)
-            Tleg.SetX2(1)
-            Tleg.SetY1(0)
-            Tleg.SetY2(1)
+            Tleg.SetX1(0.16)
+            Tleg.SetX2(0.98)
+            Tleg.SetY1(0.08)
+            Tleg.SetY2(0.92)
             Tleg.SetTextSize(2*MNVPLOTTER.legend_text_size);
             Tleg.Draw()
     if outname:
-        
         mnvplotter.MultiPrint(canvas,outname,"png")
 
 def Print(outname,mnvplotter=MNVPLOTTER,canvas=CANVAS):
     mnvplotter.MultiPrint(canvas,outname,"png")
 
 def SetMargin(pad):
-    pad.SetRightMargin(0)
-    #pad.SetLeftMargin(0)
-    pad.SetTopMargin(0.1)
-    #pad.SetBottomMargin(0)
+    pad.SetRightMargin(0.02)
+    pad.SetLeftMargin(0.16)
+    pad.SetTopMargin(0.08)
+    pad.SetBottomMargin(0.08)
 
 def GetTLegend(pad):
     tlist = pad.GetListOfPrimitives()

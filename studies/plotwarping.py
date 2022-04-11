@@ -25,10 +25,14 @@ smearedDataDir = "Stat_Varied_Smeared_Data"
 chi2SummaryDir = "Chi2_Iteration_Dists"
 chi2SummaryName = "h_chi2_modelData_trueData_iter_chi2"
 medianHistName = "h_median_chi2_modelData_trueData_iter_chi2"
-meanChi2ProfileName = "m_avg_chi2_modelData_trueData_iter_chi2_truncated"
+meanChi2ProfileName = "m_avg_chi2_modelData_trueData_iter_chi2"
+meanMCChi2ProfileName = "m_avg_chi2_modelData_trueMC_iter_chi2"
 
 lineWidth = 3
 iterChosen = None
+
+def GetStD(hist2D):
+    F=ROOT.TProfile("tf1","StdDev")
 
 def draw(fileName,univName,yNDF=None):
     myFile = ROOT.TFile.Open(fileName)
@@ -53,7 +57,7 @@ def draw(fileName,univName,yNDF=None):
         spread.SetTitleOffset(0.75, "X")
         spread.SetTitleOffset(0.65, "Y")
         spread.Draw("colz")
-  
+
     profile = myFile.Get(chi2SummaryDir).Get(meanChi2ProfileName)
     if profile:
         profile.SetTitle("Mean Chi2")
@@ -61,6 +65,15 @@ def draw(fileName,univName,yNDF=None):
         profile.SetLineColor(ROOT.kBlue)
         profile.SetMarkerStyle(0)
         profile.Draw("SAME")
+        profile.ProjectionX("_px","C=E").Draw("HIST SAME")
+
+    profileMC = myFile.Get(chi2SummaryDir).Get(meanMCChi2ProfileName)
+    if profileMC:
+        profileMC.SetTitle("Mean MC Chi2")
+        profileMC.SetLineWidth(lineWidth)
+        profileMC.SetLineColor(ROOT.kRed)
+        profileMC.SetMarkerStyle(0)
+        profileMC.Draw("SAME")
   
     median = myFile.Get(chi2SummaryDir).Get(medianHistName)
     if median:
@@ -90,6 +103,7 @@ def draw(fileName,univName,yNDF=None):
     #while I must Draw() it first to set the right axis limits.
     leg = ROOT.TLegend(0.6, 0.6, 0.9, 0.9)
     leg.AddEntry(profile)
+    leg.AddEntry(profileMC)
     leg.AddEntry(median)
     leg.AddEntry(ndfLine, "Number of Bins", "l")
     leg.AddEntry(doubleNDFLine, "2x Number of Bins", "l")
@@ -100,7 +114,7 @@ def draw(fileName,univName,yNDF=None):
     myFile.Close()
     return True
 
-def draw2(fileName,univName):
+def draw2(fileName,univName,iteration=10):
     f = ROOT.TFile.Open(path)
     if not f:
         return False
@@ -114,7 +128,7 @@ def draw2(fileName,univName):
     hheat = ROOT.TH2D("recohists","reco histogram",h.GetNbinsX(),0,h.GetNbinsX(),100,0,h.GetMaximum()*1.1)
    
     for i in range(1,100):
-        hthis = f.Get(smearedDataDir).Get("Input_Stat_{}_Iter_1_Linear".format(i))
+        hthis = f.Get(smearedDataDir).Get("Input_Stat_{}_Iter_{}_Linear".format(i,iteration))
         for j in range(0,hthis.GetSize()):
             hheat.Fill(j-0.1,hthis.GetBinContent(j))
     hheat.Draw("COLZ")
@@ -128,7 +142,7 @@ def draw2(fileName,univName):
     f.Close()
     return True
 
-def draw3(fileName,univName):
+def draw3(fileName,univName,iteration=10):
     f = ROOT.TFile.Open(path)
     if not f:
         return False
@@ -143,7 +157,7 @@ def draw3(fileName,univName):
     #h.Scale(hdata.Integral()/h.Integral())
     hheat = ROOT.TH2D("truthhists","truth histogram",h.GetNbinsX(),0,h.GetNbinsX(),100,0,h.GetMaximum()*1.1)
     for i in range(1,100):
-        hthis = f.Get(unfoldedDataDir).Get("Stat_{}_Iter_10_Linear".format(i))
+        hthis = f.Get(unfoldedDataDir).Get("Stat_{}_Iter_{}_Linear".format(i,iteration))
         for j in range(0,hthis.GetSize()):
             hheat.Fill(j-0.1,hthis.GetBinContent(j))
     hheat.Draw("COLZ")
@@ -192,12 +206,12 @@ if __name__ =="__main__":
         print(sys.argv[1])
         hists = sys.argv[1:]
     else:
-        hists = ["CCNUE_Warping_2022-02-28-135620_hists"]
+        hists = ["CCNUE_Warping_2022-03-28-215857_hists"]
     
     plotpathroot = "/minerva/data/users/hsu/nu_e/plot/warping/"
     target = ["Eavail_Lepton_Pt","Eavail_q3"]
     #model = ["CV","SuSA2p2h"]
-    model = ["CV","MK_Model", "FSI_Weight0", "FSI_Weight1", "FSI_Weight2","SuSA2p2h", "LowQ2Pi0","LowQ2Pi2","LowQ2Pi1","LowQ2Pi3","2p2h0","2p2h1","2p2h2","RPA_highq20","RPA_lowq20","RPA_highq21","RPA_lowq21","GenieMaCCQE_UP","GenieMaCCQE_DOWN"]
+    model = ["CV","MK_Model", "FSI_Weight0", "FSI_Weight1", "FSI_Weight2","SuSA2p2h", "LowQ2Pi_NUPi0","LowQ2Pi_Joint","2p2h0","2p2h1","2p2h2","RPA_highq20","RPA_lowq20","RPA_highq21","RPA_lowq21","GenieMaCCQE_UP","GenieMaCCQE_DOWN"]
     Iterations = [i for i in range(0,15)]
     can = ROOT.TCanvas("c1","c1",960,720)
     ROOT.gStyle.SetOptStat(0)
@@ -205,7 +219,7 @@ if __name__ =="__main__":
     for i in hists:
         for j in target:
             for k in model:
-                for l in [-1,0,1]:
+                for l in [-1]:#,0,1]:
                     path = "/pnfs/minerva/scratch/users/hsu/{}/transWrap_{}{}_{}.root".format(i,k,j,l)
                     draw(path,k)
-                    draw3(path,k)
+                    draw3(path,k,15 if target == "Eavail_q3" else 10)

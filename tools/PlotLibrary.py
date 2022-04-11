@@ -1387,7 +1387,7 @@ PLOT_SETTINGS= {
         "binning" : [PlotConfig.ELECTRON_ANGLE_BINNING,
                      PlotConfig.ELECTRON_ANGLE_BINNING],
         "value_getter" : [lambda event: event.kin_cal.reco_theta_lep,lambda event: event.kin_cal.true_theta_lep],
-        "tags":reco_tags,
+        "tags":migration_tags,
     },
      "Lepton Energy Theta":
     {

@@ -108,8 +108,8 @@ VISIBLE_ENERGY_RESIDUAL_BINNING = [-1+0.04* i for i in range(0,51)]
 ELECTRON_ENERGY_RESIDUAL_BINNING = [-1+0.05* i for i in range(0,41)]
 #EXCESS_ENERGY_BINNING = [0, 3, 6, 9, 12, 15, 20]  # ELECTRON_ENERGY_BINNING + [12, 15, 20]
 #ELECTRON_ENERGY_BINNING = [0.75, 2, 3, 5, 7, 9, 20]  # Jaewon's bins
-NEUTRINO_ENERGY_BINNING = [i for i in range(21)]
-#NEUTRINO_ENERGY_BINNING = [2.5,2.75,3.0,3.25,3.5,3.75,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,10,12.5,15,20]
+#NEUTRINO_ENERGY_BINNING = [i for i in range(6)] + [7, 10] # , 13, 18, 25]
+NEUTRINO_ENERGY_BINNING = [2.5,2.75,3.0,3.25,3.5,3.75,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,10,12.5,15,20]
 #NEUTRINO_ENERGY_BINNING_BIGGER = [i for i in range(6)] + [7, 10, 13, 18, 25]
 #OD_ENERGY_BINNING = [0, 0.5, 1, 2, 3, 4, 5] 
 #VISIBLE_ENERGY_BINNING = [ 0.1*i for i in range(20) ] + [0.2*i for i in range(10, 20)] + [0.5*i for i in range(8, 14)] + range(7, 10)
@@ -253,14 +253,14 @@ HISTS_TO_MAKE = [
 
     {"variables":["Visible Energy","Lepton Pt"],
      "tags": {"sideband","truth_class"},
-     "name":"Eavail_Lepton_Pt_AltTune",
+     "suffix":"_AltTune",
      "cuts": [lambda event : 0.2<= event.kin_cal.reco_visE < 0.5],
      },
 
-    {"variables":["Visible Zoomin","Lepton Energy"],
-     "tags": {"truth_class","sideband"},
-     "cuts":[lambda event: event.kin_cal.reco_q2_QE<0.02, lambda event: event.kin_cal.reco_Etheta2<0.0032]
-     },
+    # {"variables":["Visible Zoomin","Lepton Energy"],
+    #  "tags": {"truth_class","sideband"},
+    #  "cuts":[lambda event: event.kin_cal.reco_q2_QE<0.02, lambda event: event.kin_cal.reco_Etheta2<0.0032]
+    #  },
 
     # {"variables":["Lepton Energy","Q3"],
     #  "tags": {"truth_class","sideband"},
@@ -333,7 +333,7 @@ HISTS_TO_MAKE = [
     #  "tags":{"truth_class","sideband"}},
     # {"variables": ["Vertex Energy","Lepton Energy"],
     #  "tags":{"truth_class","sideband"}},
-    "True Neutrino Energy",
+    # "True Neutrino Energy",
     # {"variables": ["Euv"],
     #  "tags":{"truth_class","sideband"}},
     # {"variables": ["Exuv"],

@@ -20,7 +20,7 @@ XSEC_TO_MAKE = [
     "Visible Energy vs q3",
     "Visible Energy vs Lepton Pt"
 ]
-USE_BIGNUE = True
+USE_BIGNUE = False
 threshold = 100 if USE_BIGNUE else 1
 TARGET_UTILS = PlotUtils.TargetUtils.Get()
 warping_errorband = ["fsi_weight","SuSA_Valencia_Weight","MK_model","LowQ2Pi_Joint","LowQ2Pi_NUPI0"]
@@ -188,6 +188,13 @@ def DrawModelComparison(data_hist,mc_hist,models=MODELS,band_on_mc=True):
     plotter = lambda mnvplotter,data_hist, *mc_ints : partial(PlotTools.MakeModelVariantPlot,color=_colors,title=_cate)(data_hist, mc_ints)
     PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[data_hist,*_mc_models],draw_seperate_legend=True)
     PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_models"))
+    h0 = PlotUtils.MnvH2D(mc_hist.GetCVHistoWithStatError())
+    for i in _mc_models:
+        i.Divide(i,h0)
+    data_hist.Divide(data_hist,h0)
+    PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[data_hist,*_mc_models],draw_seperate_legend=True)
+    PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_models_ratio"))
+
 
 
 

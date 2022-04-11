@@ -201,8 +201,17 @@ def PlaylistLookup(run):
     elif run>=122880 and run<=122999:
         return "minervame6f"
 
-    elif run>=123100 and run<=123249:
+    elif run>=123100 and run<=123141:
         return "minervame6g"
+
+    elif run>=123250 and run<=123300:
+        return "minervame6h"
+
+    elif run>=123425 and run<=123465:
+        return "minervame6i"
+
+    elif run>=123467 and run<=123606:
+        return "minervame6j"
 
     elif run>=131000 and run<=131019:
         return "minervame3a"

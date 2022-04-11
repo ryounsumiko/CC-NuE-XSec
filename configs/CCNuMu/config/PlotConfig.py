@@ -242,9 +242,7 @@ def FindQ2Bin(q2_val):
 	return q2_bin
 
 def Printvar(event):
-    print(event.mc_FSPartPDG)
-    print(event.mc_FSPartE)
-    print((event.kin_cal.true_visE, event.kin_cal.reco_visE))
+    print(event.mc_intType,event.mc_resID,event.mc_charm)
 
 #make sure all categories have a color and a name
 #assert set(INT_COLORS.keys())==set(INT_NAMES.keys())
@@ -360,7 +358,7 @@ HISTS_TO_MAKE = [
      "tags":{"mc_only","truth_class"}},
     {"variables":["True Q0","True Lepton Pt"],
      "tags":{"mc_only","truth_class"}},
-     "True Signal Neutrino Energy"
+     "True Signal Neutrino Energy",
     #"Lepton Energy High Inline",
     # {"variables":["W"],
     #  "tags": {"sideband","truth_class"}
@@ -372,15 +370,16 @@ HISTS_TO_MAKE = [
     #  "tags": {"mc_only"},
     #  "cuts": [(lambda event: event.classifier.is_true_signal),(lambda universe: universe.ShortName() == "cv"),(lambda event: event.classifier.side_band == "Signal"),(lambda event :event.kin_cal.true_visE - event.kin_cal.reco_visE>0.4)]
     #  },
-    #  {"variables":["Print Var"],
-    #   "tags": {"mc_only"},
-    #   "cuts": [(lambda event: event.classifier.is_true_signal),(lambda universe: universe.ShortName() == "cv"),(lambda event: event.classifier.side_band == "Signal"),(lambda event :event.kin_cal.true_visE - event.kin_cal.reco_visE>0.4)]
-    #   },
+     # {"variables":["Print Var"],
+     #  "tags": {"mc_only"},
+     #  "cuts": [(lambda event: event.classifier.truth_class=="CCOther"),(lambda universe: universe.ShortName() == "cv"),(lambda event: event.classifier.side_band == "Signal")]
+     #  },
     # {"variables":["Start Multiplicity"],
     #  "tags": {"sideband","truth_class"}
     #  },
     # {"variables":["Vertex Multiplicity"],
     #  "tags": {"sideband","truth_class"}
     #  },
+    
 
 ]

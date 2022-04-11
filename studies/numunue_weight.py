@@ -9,13 +9,14 @@ from functools import partial
 
 
 ROOT.TH1.AddDirectory(False)
-numufile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1LMOP_muon_MAD.root"
-nuefile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1LMOP_electron_MAD.root"
+numufile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx1_muon_MAD.root"
+nuefile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx1_electron_MAD.root"
+nuesignalrichfile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_BigNuE1_electron_MAD.root"
 nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_electron_MAD.root"
 nuedatafile = "/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_electron_MAD.root"
 numuweightedfile =  {
-    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1LMOP_muon_weighted_MAD.root",
-    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1LMOP_muon_weighted_MAD.root"
+    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_muon_true_weighted_MAD.root",
+    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_muon_weighted_MAD.root"
 }
 
 MU_SIGNALS = ["CCQE","CCDelta","CC2p2h","CCDIS","CCOther"]
@@ -26,13 +27,22 @@ MU_BACKGROUNDS = ["NC","CCNuE","CCAntiNuMu","NonFiducial","NonPhaseSpace","Other
 PLOTPATH = "/minerva/data/users/hsu/numunueRatioPlots/"
 
 SIGNAL_CHANNEL_PAIR = [
-    ("CCQE","CCNuEQE"),
-    ("CCDelta","CCNuEDelta"),
-    ("CCDIS","CCNuEDIS"),
-    ("CCOther","CCNuE")
+    ("CCQE","CCNuEQE","QE"),
+    ("CCDelta","CCNuEDelta","Res"),
+    ("CCDIS","CCNuEDIS","DIS"),
+    ("CCOther","CCNuE","Others"),
+    ("CC2p2h","CCNuE2p2h","2p2h"),
 ]
 
+COLORS=ROOT.MnvColors.GetColors()
+
+
 #E_SIGNALS = MU_SIGNALS
+
+def relativePOT(nue_true_signal,nue_true_signal_bignue,nue_POT):
+    f = lambda hist:hist.GetEntries()
+    #f = lambda hist:hist.Integral(0,-1,0,-1)
+    return nue_POT * f(nue_true_signal_bignue)/f(nue_true_signal)
 
 def SubtractPoissonHistograms(h,h1):
     h.AddMissingErrorBandsAndFillWithCV(h1)
@@ -69,13 +79,15 @@ def MakeScaleFile(hist_names):
     ePOT = Utilities.getPOTFromFile(nuefile)
     fmu = ROOT.TFile.Open(numufile)
     muPOT = Utilities.getPOTFromFile(numufile)
+    fesignalrich = ROOT.TFile.Open(nuesignalrichfile)
+    esignalrichPOT = relativePOT(fe.Get("Eavail_q3_true_signal"),fesignalrich.Get("Eavail_q3_true_signal"),ePOT)
     print(ePOT,muPOT)
     for hist_name in hist_names:
-        he = GetSignalHist(fe,E_SIGNALS,hist_name)
+        he = GetSignalHist(fesignalrich,E_SIGNALS,hist_name)
         hmu = GetSignalHist(fmu,MU_SIGNALS,hist_name)
         he.AddMissingErrorBandsAndFillWithCV(hmu)
         hmu.AddMissingErrorBandsAndFillWithCV(he)
-        hmu.Scale(ePOT/muPOT)
+        hmu.Scale(esignalrichPOT/muPOT)
         Fout.cd()
         he.Divide(he,hmu)
         he.Write(hist_name)
@@ -89,10 +101,12 @@ def MakeScaleFile2():
     ePOT = Utilities.getPOTFromFile(nuefile)
     fmu = ROOT.TFile.Open(numufile)
     muPOT = Utilities.getPOTFromFile(numufile)
-    print(ePOT,muPOT)
-    he = GetSignalHist(fe,E_SIGNALS,"tEnu")
+    fesignalrich = ROOT.TFile.Open(nuesignalrichfile)
+    esignalrichPOT = relativePOT(fe.Get("Eavail_q3_true_signal"),fesignalrich.Get("Eavail_q3_true_signal"),ePOT)
+    print(ePOT,muPOT,esignalrichPOT)
+    he = GetSignalHist(fesignalrich,E_SIGNALS,"tEnu")
     migration = fmu.Get("Enu_migration").Clone()
-    he.Scale(muPOT/ePOT)
+    he.Scale(muPOT/esignalrichPOT)
     tmp = FindScale2(he,migration)
     scale_hist = fmu.Get("Enu").Clone()
     for i in range(scale_hist.GetNbinsX()+2):
@@ -113,7 +127,7 @@ def FindScale2(target,migration):
         for y in range(migration.GetNbinsY()+2):
             m[y][x]=migration.GetBinContent(x,y)
 
-    for y in range(target.GetNbinsX()):
+    for y in range(target.GetNbinsX()+2):
         t[y][0] = target.GetBinContent(y)
 
     SVD = ROOT.TDecompSVD(m)
@@ -142,30 +156,56 @@ def MakeCompPlot():
         mc_hist2 = args[1]
         data_hist1 = args[2] if len(args)>2 else None
         data_hist2 = args[3] if len(args)>3 else None
-        leg = ROOT.TLegend(0.5,0.7,0.9,0.9).Clone()
+        leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
         # if data_hist:
         #     data_hist.Draw("E1 X0")
+
+        # for h in args:
+        #     if h is None:
+        #         continue
+        #     h.GetXaxis().SetRange(1,h.GetNbinsX()+1)
+
+        m = max(map(lambda h: h.GetMaximum(),[h for h in args if h is not None])) * 1.1
+        for h in args:
+            if h is None:
+                continue
+            h.SetLineWidth(3)
+            h.SetMaximum(m)
+
+
         if data_hist1:
             #data_hist1.SetTitle("nue Data")
             data_hist1.SetLineColor(ROOT.kRed+2)
+            # data_hist1.SetMaximum(m)
+            # data_hist1.SetLineWidth(3)
+            #data_hist1.GetXaxis().SetRangeUser(0,data_hist1.GetNbinsX()+1)
             #data_hist1.SetMarkerColor(ROOT.kRed)
             data_hist1.Draw("SAME")
             leg.AddEntry(data_hist1,"nue data")
         if data_hist2:
             #data_hist2.SetTitle("numu Data")
-            data_hist2.SetLineColor(ROOT.kGreen+2)
+            data_hist2.SetLineColor(ROOT.kGreen-2)
             #data_hist2.SetMarkerColor(ROOT.kGreen)
+            # data_hist2.SetMaximum(m)
+            # data_hist2.SetLineWidth(3)
+            #data_hist2.GetXaxis().SetRangeUser(0,data_hist2.GetNbinsX()+1)
             data_hist2.Draw("SAME")
             leg.AddEntry(data_hist2,"weighted numu data")
         if mc_hist1:
             #mc_hist1.SetTitle("nue MC")
             mc_hist1.SetLineColor(ROOT.kRed)
-            mc_hist1.Draw("HIST SAME")
+            # mc_hist1.SetMaximum(m)
+            # mc_hist1.SetLineWidth(3)
+            #mc_hist1.GetXaxis().SetRangeUser(0,mc_hist1.GetNbinsX()+1)
+            mc_hist1.Draw("HIST E1 SAME")
             leg.AddEntry(mc_hist1,"nue MC")
         if mc_hist2:
             #mc_hist2.SetTitle("weighted numu MC")
             mc_hist2.SetLineColor(ROOT.kGreen)
-            mc_hist2.Draw("HIST SAME")
+            # mc_hist2.SetMaximum(m)
+            # mc_hist2.SetLineWidth(3)
+            #mc_hist2.GetXaxis().SetRangeUser(0,mc_hist2.GetNbinsX()+1)
+            mc_hist2.Draw("HIST E1 SAME")
             leg.AddEntry(mc_hist2,"weighted numu MC")
         leg.Draw()
 
@@ -180,7 +220,27 @@ def MakeCompPlot():
         h_r2.Divide(h_r2,h4)
         DrawRatio(mnvplotter,h_r1,h_r2,include_systematics)
 
+    def DrawFraction(mnvplotter,*cates,titles,colors,canvas=PlotTools.CANVAS):
+        leg = ROOT.TLegend(0.5,0.7,0.9,0.9).Clone()
+        for i,v in enumerate(cates):
+            v.SetLineColor(colors[i])
+            v.SetLineWidth(3)
+            v.SetMaximum(1)
+            v.Draw("HIST E1 SAME")
+            leg.AddEntry(v,titles[i])
+        leg.Draw()
+
+    def GetFractions(histfile,cates,hist_name):
+        htotal = GetSignalHist(histfile,cates,hist_name)
+        hcomps =[]
+        for i in cates:
+            hcomps.append(GetSignalHist(histfile,[i],hist_name))
+        return PlotTools.Ratio(hcomps,htotal,"B")
+
+
     nueMCfile,nueMCPOT = getFileAndPOT(nuefile)
+    nueMCsignalfile,nueMCsignalPOT = getFileAndPOT(nuesignalrichfile)
+    nueMCsignalPOT = relativePOT(nueMCfile.Get("Eavail_q3_true_signal"),nueMCsignalfile.Get("Eavail_q3_true_signal"),nueMCPOT)
     nueBkgfile,nueBkgPOT = getFileAndPOT(nuebkgtunedfile)
     numuMCfile,numuMCPOT = getFileAndPOT(numuweightedfile["mc"])
     numuDatafile,numuDataPOT = getFileAndPOT(numuweightedfile["data"])
@@ -189,7 +249,7 @@ def MakeCompPlot():
 
     for hist_name in [ "Eavail_q3", "Enu" ,"Eavail_Lepton_Pt","Q3","Q0","tQ0","tQ3","tLepton_Pt","tQ0_tQ3","tQ0_tLepton_Pt","Eavail","tEavail","tEavail_tQ3","tEavail_tLepton_Pt","Lepton_Pt","tEnu","Eavail_q3_true_signal", "Eavail_Lepton_Pt_true_signal", "tEnu_true_signal"]:
         try:
-            he = GetSignalHist(nueMCfile,E_SIGNALS,hist_name)
+            he = GetSignalHist(nueMCsignalfile,E_SIGNALS,hist_name)
             hmu = GetSignalHist(numuMCfile,MU_SIGNALS,hist_name)
             hebkg = GetSignalHist(nueBkgfile,E_BACKGROUNDS,hist_name)
             hmubkg = GetSignalHist(numuMCfile,MU_BACKGROUNDS,hist_name)
@@ -197,15 +257,15 @@ def MakeCompPlot():
             print ("hist: {} not found".format(hist_name))
             continue
         hmu.Scale(numuDataPOT/numuMCPOT)
-        he.Scale(numuDataPOT/nueMCPOT)
+        he.Scale(numuDataPOT/nueMCsignalPOT)
         hebkg.Scale(numuDataPOT/nueBkgPOT)
         hmubkg.Scale(numuDataPOT/numuMCPOT)
         hmudata = numuDatafile.Get(hist_name)
         if hmudata:
             SubtractPoissonHistograms(hmudata,hmubkg)
         hedata = nueDatafile.Get(hist_name)
-        hedata.Scale(numuDataPOT/nueDataPOT)
         if hedata:
+            hedata.Scale(numuDataPOT/nueDataPOT)
             SubtractPoissonHistograms(hedata,hebkg)
 
         Slicer = PlotTools.Make2DSlice if he.GetDimension()==2 else (lambda hist : [hist])
@@ -229,17 +289,38 @@ def MakeCompPlot():
         PlotTools.MakeGridPlot(Slicer,DrawRatio,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
         PlotTools.CANVAS.Print("{}{}_MCratio.png".format(PLOTPATH,hist_name))
 
-        for numu_sig,nue_sig in SIGNAL_CHANNEL_PAIR:
-            he = GetSignalHist(nueMCfile,[nue_sig],hist_name)
+        
+        for numu_sig,nue_sig,_ in SIGNAL_CHANNEL_PAIR:
+            he = GetSignalHist(nueMCsignalfile,[nue_sig],hist_name)
             hmu = GetSignalHist(numuMCfile,[numu_sig],hist_name)
             hmu.Scale(numuDataPOT/numuMCPOT)
-            he.Scale(numuDataPOT/nueMCPOT)
+            he.Scale(numuDataPOT/nueMCsignalPOT)
+            PlotTools.MakeGridPlot(Slicer,Draw,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
+            PlotTools.CANVAS.Print("{}{}_{}MC.png".format(PLOTPATH,hist_name,numu_sig))
             drawer = partial(DrawRatio, include_systematics=False)
             PlotTools.MakeGridPlot(Slicer,drawer,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
             PlotTools.CANVAS.Print("{}{}_{}MCratio.png".format(PLOTPATH,hist_name,numu_sig))
 
+        titles = []
+        mu_cates = []
+        e_cates = []
+        colors = []
+        for i,v  in enumerate(SIGNAL_CHANNEL_PAIR):
+            (numu_sig,nue_sig,title) = v
+            titles.append(title)
+            e_cates.append(nue_sig)
+            mu_cates.append(numu_sig)
+            colors.append(COLORS[i])
+        Fraction_e = GetFractions(nueMCsignalfile,e_cates,hist_name)
+        Fraction_mu = GetFractions(numuMCfile,mu_cates,hist_name)
+        drawer = partial(DrawFraction,titles=titles,colors=colors)
+        PlotTools.MakeGridPlot(Slicer,drawer,Fraction_e,draw_seperate_legend = he.GetDimension()==2)
+        PlotTools.CANVAS.Print("{}{}_MCfractionE.png".format(PLOTPATH,hist_name))
+        PlotTools.MakeGridPlot(Slicer,drawer,Fraction_mu,draw_seperate_legend = he.GetDimension()==2)
+        PlotTools.CANVAS.Print("{}{}_MCfractionMU.png".format(PLOTPATH,hist_name))
+
 
 if __name__ == "__main__":
     #MakeCompPlot()
-    # MakeScaleFile(["Enu","tEnu","tEnu_true_signal"])
+    #MakeScaleFile(["Enu","tEnu","tEnu_true_signal"])
     MakeScaleFile2()

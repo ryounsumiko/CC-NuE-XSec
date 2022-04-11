@@ -429,39 +429,39 @@ if __name__ == "__main__":
         hist.Write()
 
 
-    region = "Signal"
+    # region = "Signal"
 
-    for hist in HISTOGRAMS_TO_UNFOLD:
-        data_hist,mc_hist = GetScaledDataMC(hist,datafile,mcfile,region)
-        #data_hist.GetHist().Write(data_hist.plot_name)
-        mc_hist.GetHist().Write(data_hist.plot_name)
-        bkg = GetBackground(mc_hist)
-        bkg.Write(data_hist.plot_name+"_mcbkg")
-        #data.Write(data_hist.plot_name+"_bkgSubed")
-        #mc.Write(data_hist.plot_name+"_mc")
+    # for hist in HISTOGRAMS_TO_UNFOLD:
+    #     data_hist,mc_hist = GetScaledDataMC(hist,datafile,mcfile,region)
+    #     #data_hist.GetHist().Write(data_hist.plot_name)
+    #     mc_hist.GetHist().Write(data_hist.plot_name)
+    #     bkg = GetBackground(mc_hist)
+    #     bkg.Write(data_hist.plot_name+"_mcbkg")
+    #     #data.Write(data_hist.plot_name+"_bkgSubed")
+    #     #mc.Write(data_hist.plot_name+"_mc")
 
-    #change playlist
-    type_path_map = { t:AnalysisConfig.SelectionHistoPath(playlist,t =="data",False) for t in AnalysisConfig.data_types}
-    datafile,mcfile,pot_scale = Utilities.getFilesAndPOTScale(playlist,type_path_map,AnalysisConfig.ntuple_tag)
+    # #change playlist
+    # type_path_map = { t:AnalysisConfig.SelectionHistoPath(playlist,t =="data",False) for t in AnalysisConfig.data_types}
+    # datafile,mcfile,pot_scale = Utilities.getFilesAndPOTScale(playlist,type_path_map,AnalysisConfig.ntuple_tag)
 
-    for config in PLOTS_TO_MAKE:
-        sideband_group =  config.setdefault("sideband_group",["Signal"]+AnalysisConfig.sidebands)
-        if isinstance(sideband_group,list):
-            for sideband in sideband_group:
-                data_hist,mc_hist = GetScaledDataMC(config["name"] if "name" in config else config,datafile,mcfile,sideband)
-                MakePlot(data_hist,mc_hist,config)
-        else:
-            #assuing sideband_group is a tuple of name, and list of sidebands
-            sideband = sideband_group[0]
-            sidebands = sideband_group[1]
-            data_hist,mc_hist = GetScaledDataMC(config["name"] if "name" in config else config,datafile,mcfile,sidebands[0])
-            for _ in range(1,len(sidebands)):
-                data_hist_tmp,mc_hist_tmp = GetScaledDataMC(config["name"] if "name" in config else config,datafile,mcfile,sidebands[_])
-                data_hist.Add(data_hist_tmp)
-                mc_hist.Add(mc_hist_tmp)
-            MakePlot(data_hist,mc_hist,config)
+    # for config in PLOTS_TO_MAKE:
+    #     sideband_group =  config.setdefault("sideband_group",["Signal"]+AnalysisConfig.sidebands)
+    #     if isinstance(sideband_group,list):
+    #         for sideband in sideband_group:
+    #             data_hist,mc_hist = GetScaledDataMC(config["name"] if "name" in config else config,datafile,mcfile,sideband)
+    #             MakePlot(data_hist,mc_hist,config)
+    #     else:
+    #         #assuing sideband_group is a tuple of name, and list of sidebands
+    #         sideband = sideband_group[0]
+    #         sidebands = sideband_group[1]
+    #         data_hist,mc_hist = GetScaledDataMC(config["name"] if "name" in config else config,datafile,mcfile,sidebands[0])
+    #         for _ in range(1,len(sidebands)):
+    #             data_hist_tmp,mc_hist_tmp = GetScaledDataMC(config["name"] if "name" in config else config,datafile,mcfile,sidebands[_])
+    #             data_hist.Add(data_hist_tmp)
+    #             mc_hist.Add(mc_hist_tmp)
+    #         MakePlot(data_hist,mc_hist,config)
 
-    #make bkg subtracted data histogram
+    # #make bkg subtracted data histogram
 
     datafile.Close()
     mcfile.Close()

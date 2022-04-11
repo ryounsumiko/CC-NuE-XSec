@@ -2,6 +2,7 @@ import datetime as dt
 import os, time, sys, math
 from config.GRIDConfig import gridargs,anaargs
 from tools import Utilities
+import subprocess
 
 baseDir = os.path.dirname(os.path.abspath(__file__))+"/../"
 MacroName = baseDir.split("/")[-4]
@@ -60,6 +61,10 @@ def addBashLine( wrapper , command ):
   wrapper.write("%s\n" % command)
   wrapper.write("echo '---------------'\n")
 
+def GridJobsProtection(threshold=200):
+    cmd = "jobsub_q --user hsu -G minerva | grep fnal.gov | wc -l"
+    njobs = int(subprocess.run(cmd,stdout=subprocess.PIPE,shell=True).stdout.decode('utf-8'))
+    return njobs>threshold
 
 def submitJob( tupleName):
 
@@ -93,7 +98,7 @@ def submitJob( tupleName):
   os.system( "chmod 777 %s" % wrapper_name )
   
   #cmd = "jobsub_submit --group=minerva -l '+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --role=Analysis --memory %dMB -f %s/testRelease.tar.gz -d HISTS %s -d LOGS %s -r %s -N %d --expected-lifetime=%dh --cmtconfig=%s -i /cvmfs/minerva.opensciencegrid.org/minerva/software_releases/%s/ file://%s/%s" % ( memory , outdir_tarball , outdir_hists , outdir_logs , os.environ["MINERVA_RELEASE"], njobs, 12, os.environ["CMTCONFIG"],os.environ["MINERVA_RELEASE"], os.environ["PWD"] , wrapper_name )
-  cmd = "jobsub_submit --group=minerva -l '+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --role=Analysis --memory %dMB --tar_file_name dropbox://%s -d HISTS %s -d LOGS %s -N %d --expected-lifetime=%dh  file://%s/%s" % ( memory , outdir_tarball , outdir_hists , outdir_logs , njobs, 18, os.environ["PWD"] , wrapper_name )
+  cmd = "jobsub_submit --group=minerva -l '+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --role=Analysis --memory %dMB --tar_file_name dropbox://%s -d HISTS %s -d LOGS %s -N %d --expected-lifetime=%dh  file://%s/%s" % ( memory , outdir_tarball , outdir_hists , outdir_logs , njobs, 24, os.environ["PWD"] , wrapper_name )
   # Copy local files to PNFS, they aren't there already
   #copyLocalFilesToPNFS(tupleName,outdir_logs) 
  
@@ -130,6 +135,10 @@ if __name__ == '__main__':
   createTarball(outdir_tarball)
 
   for playlist in gridargs.playlists:
+    while GridJobsProtection():
+        print("Too much job submitted, sleep 10min.")
+        time.sleep(60*10)
+
     for dataSwitch in ["mc","data"]:
       if (gridargs.data_only and dataSwitch == "mc" ) or (gridargs.mc_only and dataSwitch == "data"):
         continue
@@ -140,7 +149,7 @@ if __name__ == '__main__':
         memory = gridargs.memory
     
       if gridargs.count is None:
-        count = 1
+        count = 1000 if dataSwitch == "data" else 1
       else:
         count = gridargs.count
 

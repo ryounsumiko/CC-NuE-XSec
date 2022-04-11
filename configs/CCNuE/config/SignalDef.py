@@ -17,7 +17,7 @@ IsCC = lambda event: event.mc_current == 1
 IsNC = lambda event: event.mc_current == 2
 
 IsQE =  lambda event : event.mc_intType==1 and event.mc_charm!=1
-IsDelta = lambda event : event.mc_intType == 2
+IsDelta = lambda event : event.mc_intType == 2 and event.mc_resID==0
 IsDIS = lambda event : event.mc_intType == 3
 IsCoherent = lambda event: event.mc_intType == 4
 IsElastic = lambda event: event.mc_intType == 7
@@ -26,6 +26,7 @@ Is2p2h = lambda event: event.mc_intType == 8
 
 IsPC = lambda event: event.mc_processType ==5
 IsUnknown  = lambda event : event.mc_intType == 10
+IsH = lambda event : event.mc_targetZ == 1
 
 def countPDG(fsparticles,pdgs):
     return sum([1 if x in pdgs else 0 for x in fsparticles])
@@ -45,7 +46,6 @@ IsPhoton = lambda event: 22 in event.mc_FSPartPDG and event.mc_FSPartPDG[0] != 2
 def IsInKinematicPhaseSpace(event):
     return all(CUTS["True{}".format(cut)].DoesEventPass(event) for cut in KINEMATICS_CUTS)
 
-
 # In case a event satisfy multiple definations, the first takes priority.
 TRUTH_CATEGORIES = OrderedDict()
 TRUTH_CATEGORIES["ExcessModel"] = lambda event: IsPC(event) or IsUnknown(event)
@@ -63,6 +63,7 @@ TRUTH_CATEGORIES["CCNuE"] = lambda event: IsCC(event) and IsNuE(event)
 TRUTH_CATEGORIES["CCDIS"] = lambda event: IsCC(event) and IsDIS(event)
 TRUTH_CATEGORIES["CCOther"] = lambda event: IsCC(event)
 TRUTH_CATEGORIES["NCCOH"] = lambda event: IsNC(event) and IsCoherent(event)
+TRUTH_CATEGORIES["NCHDIS"] = lambda event: IsNC(event) and IsDIS(event) and IsH(event)
 TRUTH_CATEGORIES["NCDIS"] = lambda event: IsNC(event) and IsDIS(event)
 TRUTH_CATEGORIES["NCRES"] = lambda event: IsNC(event) and IsDelta(event)
 TRUTH_CATEGORIES["NCOther"] = lambda event: IsNC(event) 

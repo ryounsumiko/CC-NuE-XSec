@@ -66,7 +66,7 @@ PT_TUNE = {
     "CATEGORY_FACTORS" : {
         "NCDIS":"Pi0",
         "CCDIS":"Pi0",
-        "NCCOH":"NCCoh",
+        # "NCCOH":"NCCoh",
         "ExcessModel":"Excess",
         "CCNuE":"Signal",
         "CCNuEQE":"Signal",
@@ -76,8 +76,8 @@ PT_TUNE = {
     }
 }
 
-PT_TUNE["SCALE_FACTORS"]["Excess"]=[0,1.6]
-PT_TUNE["SCALE_FACTORS"]["NCCoh"]=[0,1.6]
+PT_TUNE["SCALE_FACTORS"]["Excess"]=[0,0.2,0.4,0.6,0.8,1.0,1.2,1.6]
+#PT_TUNE["SCALE_FACTORS"]["NCCoh"]=[0,1.6]
 PT_TUNE["SCALE_FACTORS"]["Pi0"]=[0,0.2,0.4,0.6,0.8,1.0,1.2,1.6]
 PT_TUNE["SCALE_FACTORS"]["Signal"]=[0,1.6]
 
@@ -100,21 +100,6 @@ PI0PT_TUNE = {
 
 PI0PT_TUNE["SCALE_FACTORS"]["Pi0"]=[0,0.2,0.4,0.6,0.8,1.0,1.2,1.6]
 PI0PT_TUNE["SCALE_FACTORS"]["Signal"]=[0,1.6]
-
-PI0PT_TUNE2 = {
-    "HIST_TO_FIT" : "Lepton Pt",
-    "HIST_OBSERVABLE":  {"variables":["Visible Energy","Lepton Pt"],
-     "name":"Eavail_Lepton_Pt_AltTune",
-     },
-    "Yaxis":True,
-    "REGULATION_PARAMETER" : 0.01,
-    "SCALE_FACTORS" :OrderedDict(),
-    "CATEGORY_FACTORS" : {
-        "NCDIS":"Pi0",
-        "CCDIS":"Pi0",
-    }
-}
-PI0PT_TUNE2["SCALE_FACTORS"]["Pi0"]=[0,0.2,0.4,0.6,0.8,1.0,1.2,1.6]
 
 REGPT_TUNE = {
     "HIST_TO_FIT" : "Lepton Pt",
@@ -213,8 +198,7 @@ Tune_Strategy_map = {
     "visE_tune":VISE_TUNE,
     "no_tune":NO_TUNE,
     "3factors_tune":ThreeFactorsFit,
-    "regpt_tune":REGPT_TUNE,
-    "pi0pt_tune2":PI0PT_TUNE2
+    "regpt_tune":REGPT_TUNE
 }
 
 def SetGlobalParameter(iput):

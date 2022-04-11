@@ -99,8 +99,8 @@ def plotTruthKin(chainwrapper,outfile):
         for universe in chain.from_iterable(iter(universes.values())):
             universe.SetEntry(counter)
 
-            #only update kin_cal & eventClassifier when universe in not vertical only.
-            if not universe.IsVerticalOnly():
+            #only no lateral shifts in truth quantity
+            if universe.ShortName()=="cv":
                 kin_cal.CalculateKinematics(universe)
                 eventClassifier.Classify(universe)
 

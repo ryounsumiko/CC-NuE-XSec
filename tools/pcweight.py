@@ -204,7 +204,7 @@ class RHCNewWeight(MyWeighterBase):
         # self.cate_map["CCDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["DIS"])
         self.cate_map["ExcessModel"] = partial(self.fileBasedWeight,hist=self.hist_dict["Excess"])
         self.cate_map["NCCOH"] = partial(self.fileBasedWeight,hist=self.hist_dict["NCCoh"])
-        self.cate_map["CCNuEAntiNu"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
+        #self.cate_map["CCNuEAntiNu"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
         # self.cate_map["CCNuEQE"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
         # self.cate_map["CCNuEDelta"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
         # self.cate_map["CCNuE2p2h"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
@@ -224,7 +224,7 @@ class EnuElectronMuonWeightTrue(DataWeight):
     def __init__(self):
         super(EnuElectronMuonWeightTrue,self).__init__(lambda universe:universe.kin_cal.true_enu_genie)
         self.f = ROOT.TFile.Open("{}/studies/emu_scale.root".format(os.environ["CCNUEROOT"]))
-        self.h = self.f.Get("tEnu_true_signal")
+        self.h = self.f.Get("tEnu")
         self.h.ClearAllErrorBands()
         self.weighter = partial(self.fileBasedWeight,hist=self.h)
 

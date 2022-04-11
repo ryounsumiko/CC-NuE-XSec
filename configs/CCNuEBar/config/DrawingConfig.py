@@ -255,7 +255,7 @@ PLOTS_TO_MAKE = [
     #  "plot_type" : "err",},
     # {"name":"Q3 Migration",
     #  "plot_type":"migration",
-    # },
+    #  "canvasconfig":PlotTools.Logz},
     # {"name":"Lepton Pt Migration",
     #  "plot_type":"migration"},
     #  {"name":"Visible Energy Migration",

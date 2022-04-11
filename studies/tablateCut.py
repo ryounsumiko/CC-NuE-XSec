@@ -57,11 +57,16 @@ if __name__ == "__main__":
 
     data_tree =ROOT.RDataFrame("cut_stat",data_file)
     mc_tree =ROOT.RDataFrame("cut_stat",mc_file)
+    if not data_tree:
+        data_tree=mc_tree
     cut_stat = {}
     for cut in SAMPLE_CUTS["Signal"]:
         cut_stat[cut] = (data_tree.Sum("{}_{}".format(cut,"selected")).GetValue(),
                               mc_tree.Sum("{}_{}".format(cut,"selected")).GetValue(),
                               mc_tree.Sum("{}_{}".format(cut,"signal")).GetValue())
         #print (cut_stat[cut])
+    signal_all = cut_stat["NoCut"][2]
     for cut,v in sorted(cut_stat.items(),key=lambda x: x[1][0],reverse=True):
-        print ("{} & {:.0f} & {:.0f} & {:.0f} \\".format(cut,*v))
+        eff = v[2]/signal_all
+        pur = v[2]/v[1]
+        print ("{} & {:.0f} & {:.0f} & {:.0f} & {:.2f} & {:.2f}\\".format(cut,*v,eff,pur))

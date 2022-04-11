@@ -107,9 +107,9 @@ class EventClassifier(object):
         for cl in self.classifiers_to_use:
             sc = cl() and sc
 
-        if self.new_truth and len(self.classifiers_to_use)==2:
+        if self.new_truth and self._ClassifyReco in self.classifiers_to_use:
             self.cutStat()
-        return sc
+        return sc 
 
     def cutStat(self):
         for i in self.signal_cuts:
