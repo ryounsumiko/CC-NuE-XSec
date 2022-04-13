@@ -363,8 +363,8 @@ class KinematicsCalculator(object):
 
                 # True visible energy is the kinetic energy of protons and pions, plus the total energies of everything else
 
-        visibleE = protonE + pionE - pionN*M_pion + pizeroE + muonE + gammaE + otherE
-        return max(0,visibleE)/1000.0
+        # visibleE = protonE + pionE - pionN*M_pion + pizeroE + muonE + gammaE + otherE
+        # return max(0,visibleE)/1000.0
         # else :
         #     return max(0,self.event.recoile_passive)/1e3
 

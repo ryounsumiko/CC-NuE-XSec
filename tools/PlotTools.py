@@ -385,7 +385,7 @@ def SetMargin(pad):
     pad.SetRightMargin(0.02)
     pad.SetLeftMargin(0.16)
     pad.SetTopMargin(0.08)
-    pad.SetBottomMargin(0.08)
+    pad.SetBottomMargin(0.16)
 
 def GetTLegend(pad):
     tlist = pad.GetListOfPrimitives()

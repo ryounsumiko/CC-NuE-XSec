@@ -228,6 +228,13 @@ class EnuElectronMuonWeightTrue(DataWeight):
         self.h.ClearAllErrorBands()
         self.weighter = partial(self.fileBasedWeight,hist=self.h)
 
+class RHCWrongSignEstimatorWeight(DataWeight):
+    def __init__(self):
+        super(RHCWrongSignEstimatorWeight,self).__init__(lambda universe:universe.kin_cal.reco_visE+universe.kin_cal.reco_E_lep)
+        self.f = ROOT.TFile.Open("{}/studies/FHC_RHC_tEnu_Scale.root".format(os.environ["CCNUEROOT"]))
+        self.h = self.f.Get("tEnu")
+        self.weighter = partial(self.fileBasedWeight,hist=self.h)
+
 # class SarahMagicWeight(MyWeighterBase):
 #     def __init__(self):
 #         super(SarahMagicWeight,self).__init__(lambda universe:universe.kin_cal.reco_E_lep)
@@ -325,6 +332,8 @@ elif AnalysisConfig.extra_weighter =="FHCPt_tune2":
     MyWeighter = FHCPtTuningWeight()
 elif AnalysisConfig.extra_weighter =="FHCPt_tune1":
     MyWeighter = FHCPtTuningWeightAlt()
+elif AnalysisConfig.extra_weighter =="wrong_sign":
+    MyWeighter = RHCWrongSignEstimatorWeight()
 
 else:
     raise ValueError("Unknown extra weighter")

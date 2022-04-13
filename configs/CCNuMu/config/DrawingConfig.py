@@ -77,6 +77,22 @@ SignalDecomposition = {
     # }
 }
 
+SignalBackground = {
+    "Signal" :
+    {
+        "title" : "CC #nu_{e}",
+        "cate": {
+            "CCQE","CCDelta","CCDIS","CC2p2h","CCOther"
+        },
+        "color": COLORS[0]
+    },
+    "Background" : {
+        "title" : "Backgrounds",
+        "cate": {"Other","NonFiducial","NonPhaseSpace","CCNuE","NC"},
+        "color": COLORS[4]
+    }
+}
+
 
 DefaultPlotters={
     "comp":{"func": PlotTools.PrepareComp},
@@ -89,8 +105,8 @@ DefaultPlotters={
     "migration":{"func":PlotTools.PrepareMigration},
     "sigdep":{"func":PlotTools.PrepareSignalDecompose,
               "args": (SignalDecomposition,True,False)},
-    "sigdepRatio":{"func":PlotTools.PrepareSignalDecomposeRatio,
-                   "args": (SignalDecomposition,True,False)},
+    #"sigdepRatio":{"func":PlotTools.PrepareSignalDecomposeRatio,
+    #               "args": (SignalDecomposition,True,False)},
 
 }
 

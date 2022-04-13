@@ -60,13 +60,17 @@ if __name__ == "__main__":
     except:
         data_tree=mc_tree
     cut_stat = {}
+    tTotal = mc_file.Get("Eavail_q3_true_signal")
+    signal_all=tTotal.GetEntries()
+    print(signal_all)
     for cut in SAMPLE_CUTS["Signal"]+["Reco{}".format(c) for c in KINEMATICS_CUTS]:
         cut_stat[cut] = (data_tree.Sum("{}_{}".format(cut,"selected")).GetValue(),
                               mc_tree.Sum("{}_{}".format(cut,"selected")).GetValue(),
                               mc_tree.Sum("{}_{}".format(cut,"signal")).GetValue())
         #print (cut_stat[cut])
-    signal_all = cut_stat["NoCut"][2]
+    
+    #cut_stat["NoCut"][2]=signal_all
     for cut,v in sorted(cut_stat.items(),key=lambda x: x[1][0],reverse=True):
         eff = v[2]/signal_all
         pur = v[2]/v[1]
-        print ("{} & {:.0f} & {:.0f} & {:.0f} & {:.2f} & {:.2f}\\".format(cut,*v,eff,pur))
+        print ("{} & {:.0f} & {:.0f} & {:.0f} & {:.2f} & {:.2f}\\\\".format(cut,*v,eff,pur))

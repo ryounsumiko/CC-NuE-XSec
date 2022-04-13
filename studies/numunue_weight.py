@@ -15,8 +15,8 @@ nuesignalrichfile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_BigNuE1_electr
 nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_electron_MAD.root"
 nuedatafile = "/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_electron_MAD.root"
 numuweightedfile =  {
-    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_muon_MAD.root",
-    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_muon_MAD.root"
+    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx1_muon_true_weighted_MAD.root",
+    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx1_muon_weighted_MAD.root"
 }
 
 MU_SIGNALS = ["CCQE","CCDelta","CC2p2h","CCDIS","CCOther"]
@@ -268,6 +268,9 @@ def MakeCompPlot():
             hedata.Scale(numuDataPOT/nueDataPOT)
             SubtractPoissonHistograms(hedata,hebkg)
 
+        if "true_signal" in hist_name:
+            sc = he.Integral()/hmu.Integral()
+            hmu.Scale(sc)
         Slicer = PlotTools.Make2DSlice if he.GetDimension()==2 else (lambda hist : [hist])
         if hedata:
             PlotTools.MakeGridPlot(Slicer,DrawRatio,[hedata,he],draw_seperate_legend = he.GetDimension()==2)
@@ -295,6 +298,8 @@ def MakeCompPlot():
             hmu = GetSignalHist(numuMCfile,[numu_sig],hist_name)
             hmu.Scale(numuDataPOT/numuMCPOT)
             he.Scale(numuDataPOT/nueMCsignalPOT)
+            if "true_signal" in hist_name:
+                hmu.Scale(sc)
             PlotTools.MakeGridPlot(Slicer,Draw,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
             PlotTools.CANVAS.Print("{}{}_{}MC.png".format(PLOTPATH,hist_name,numu_sig))
             drawer = partial(DrawRatio, include_systematics=False)

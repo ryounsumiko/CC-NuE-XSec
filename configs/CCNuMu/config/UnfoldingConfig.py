@@ -8,6 +8,8 @@ HISTOGRAMS_TO_UNFOLD = [
     #"Psi vs q3"
 ]
 
-REGULATION_PARAMETER = 4
-PLOT_RECO = True
-
+REGULATION_PARAMETERS = {
+    "Visible Energy vs q3":15,
+    "Visible Energy vs Lepton Pt":10
+}
+PLOT_RECO = False

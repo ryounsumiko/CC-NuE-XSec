@@ -308,7 +308,7 @@ VARIABLE_DICT = {
     "True Lepton Pt":
     {
         "name" : "tLepton_Pt",
-        "title" : "tPt_lepton",
+        "title" : "P^{t}_{lep}",
         "binning" : PlotConfig.PT_BINNING,
         "value_getter" : lambda event: event.kin_cal.true_P_lep*math.sin(event.kin_cal.true_theta_lep_rad)
     },
@@ -1117,7 +1117,7 @@ PLOT_SETTINGS= {
     "Visible Energy vs q3":
     {
         "name" : "Eavail_q3",
-        "title": "Available Energy v.s. q3; Available Energy (GeV); q3 (GeV); d^{2}NEvents/dE_{avail}dq3",
+        "title": "Available Energy v.s. q3; E_{avail} (GeV); q3 (GeV); d^{2}NEvents/dE_{avail}dq3",
 
         "binning" : [PlotConfig.LOW_RECOIL_BIN_Q0,
                      PlotConfig.LOW_RECOIL_BIN_Q3],
@@ -1468,7 +1468,7 @@ PLOT_SETTINGS= {
     {
         "name" : "Eavail_q3_true_signal",
 
-        "title": "Available Energy v.s. q3; E_{avail} (GeV); q3 (GeV); NEvents",
+        "title": "Available Energy v.s. q3; E_{avail} (GeV); q_3 (GeV); NEvents",
         "binning" : [PlotConfig.LOW_RECOIL_BIN_Q0_Truth,
                      PlotConfig.LOW_RECOIL_BIN_Q3_Truth],
         "value_getter" : [lambda event: event.kin_cal.true_visE,
@@ -1489,7 +1489,7 @@ PLOT_SETTINGS= {
     {
         "name" : "Eavail_Lepton_Pt_true_signal",
 
-        "title": "Available Energy v.s. q3; E_{avail} (GeV); Lepton Pt (GeV); NEvents",
+        "title": "Available Energy v.s. q3; E_{avail} (GeV); P^{t}_{lep} (GeV); NEvents",
         "binning" : [PlotConfig.LOW_RECOIL_BIN_Q0_Truth,
                      PlotConfig.PT_BINNING_Truth],
         "value_getter" : [lambda event: event.kin_cal.true_visE,

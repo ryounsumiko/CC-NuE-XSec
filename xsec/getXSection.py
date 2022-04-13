@@ -8,7 +8,7 @@ import PlotUtils
 from config.AnalysisConfig import AnalysisConfig
 from tools import Utilities, PlotTools
 from tools.PlotLibrary import PLOT_SETTINGS
-from config.SystematicsConfig import USE_NUE_CONSTRAINT,CONSOLIDATED_ERROR_GROUPS,DETAILED_ERROR_GROUPS
+from config.SystematicsConfig import USE_NUE_CONSTRAINT,CONSOLIDATED_ERROR_GROUPS,DETAILED_ERROR_GROUPS,AnaNuPDG
 from config import DrawingConfig
 from config.CutConfig import NEUTRINO_ENERGY_RANGE,FIDUCIAL_Z_RANGE
 from functools import partial
@@ -20,7 +20,7 @@ XSEC_TO_MAKE = [
     "Visible Energy vs q3",
     "Visible Energy vs Lepton Pt"
 ]
-USE_BIGNUE = False
+USE_BIGNUE = True
 threshold = 100 if USE_BIGNUE else 1
 TARGET_UTILS = PlotUtils.TargetUtils.Get()
 warping_errorband = ["fsi_weight","SuSA_Valencia_Weight","MK_model","LowQ2Pi_Joint","LowQ2Pi_NUPI0"]
@@ -87,8 +87,8 @@ def GetNnucleonError(hist,ntargets):
 
 
 def DivideFlux(unfolded,is_mc):
-    frw= PlotUtils.flux_reweighter(FLUX,12,USE_NUE_CONSTRAINT) #playlist is dummy for now
-    flux = frw.GetIntegratedFluxReweighted(12,unfolded,NEUTRINO_ENERGY_RANGE[0],NEUTRINO_ENERGY_RANGE[1],False)
+    frw= PlotUtils.flux_reweighter(FLUX,AnaNuPDG,USE_NUE_CONSTRAINT) #playlist is dummy for now
+    flux = frw.GetIntegratedFluxReweighted(AnaNuPDG,unfolded,NEUTRINO_ENERGY_RANGE[0],NEUTRINO_ENERGY_RANGE[1],False)
     flux.PopVertErrorBand("Flux_BeamFocus")
     flux.PopVertErrorBand("ppfx1_Total")
     flux.Scale(1e-4*(mc_pot if is_mc else data_pot)) #change unit to nu/cm^2
@@ -140,7 +140,7 @@ def GetEfficiency(ifile, ifile_truth, plot):
     hist_out.Divide(hist_out,den_new,1.0,1.0,"B")
     #plot efficiency
     hist_out.GetYaxis().SetTitle(den.GetYaxis().GetTitle())
-    hist_out.GetXaxis().SetTitle("Eavail (GeV)") #hard coding for now
+    hist_out.GetXaxis().SetTitle("E_{avail} (GeV)") #hard coding for now
     hist_out.GetZaxis().SetTitle("Efficiency")
 
     plotter = lambda mnvplotter, hist: mnvplotter.DrawMCWithErrorBand(hist.GetCVHistoWithError())
@@ -161,7 +161,9 @@ def GetMCXSectionHistogram(mc_file,plot):
     sig_dep = []
     colors = []
     titles = []
-    for chan in ["CCNuEQE","CCNuEDelta","CCNuEDIS","CCNuE2p2h","CCNuE"]:
+    for chan in DrawingConfig.SignalDecomposition.keys():#["CCNuEQE","CCNuEDelta","CCNuEDIS","CCNuE2p2h","CCNuE"]:
+        if chan == "Background":
+            continue
         tmp =Utilities.GetHistogram(mc_file,"{}_{}".format(PLOT_SETTINGS["True Signal "+plot]["name"],chan))
         DivideFlux(tmp,True)
         tmp.Scale(1.0/Nnucleon)
@@ -195,6 +197,14 @@ def DrawModelComparison(data_hist,mc_hist,models=MODELS,band_on_mc=True):
     PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[data_hist,*_mc_models],draw_seperate_legend=True)
     PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_models_ratio"))
 
+def DrawClosure(mnvplotter,data_hist,mc_hist):
+    mnvplotter.DrawDataMCWithErrorBand(data_hist.GetCVHistoWithError(),mc_hist.GetCVHistoWithStatError(),1.0,"TR")
+    leg = PlotTools.GetTLegend(ROOT.gPad)
+    l=leg.GetListOfPrimitives();
+    l[0].SetLabel("signal rich sample")
+    l[1].SetLabel("standard sample")
+    leg.Draw()
+
 
 
 
@@ -225,6 +235,7 @@ if __name__ == "__main__":
             xsec.PopVertErrorBand(e)
 
         plotter = lambda mnvplotter,data_hist, mc_hist: mnvplotter.DrawDataMCWithErrorBand(data_hist.GetCVHistoWithError(),mc_hist.GetCVHistoWithStatError(),1.0,"TR")
+        #plotter = DrawClosure
         PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec,mc_xsec],draw_seperate_legend=True)
         PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec"))
         plotter = lambda mnvplotter, data_hist,mc_hist : mnvplotter.DrawDataMCRatio(data_hist.GetCVHistoWithError(),mc_hist.GetCVHistoWithStatError(),1.0,True,0.99,1.01)

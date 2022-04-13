@@ -1,6 +1,7 @@
 import ROOT
 import PlotUtils
 import sys
+import os
 
 #path = "/pnfs/minerva/persistent/users/hsu/{}_hists/transWrap_{}{}_0.root".format("CCNUE_Waring5","FSI_Weight0","Eavail_Lepton_Pt")
 #path = "/minerva/app/users/hsu/cmtuser/Minerva_CCNuEAna/Ana/CCNuE/macros/Low_Recoil/studies/transWrapT_FSI_Weight0Eavail_Lepton_Pt.root"
@@ -44,6 +45,7 @@ def draw(fileName,univName,yNDF=None):
     #  univName = "SuSA"
 
     #calculate ndf on the fly
+    fileName = os.path.splitext(fileName)[0]
     if yNDF is None:
         yNDF = 0
         truth = myFile.Get(inputDir).Get(fakeDataTruthName)
@@ -65,15 +67,15 @@ def draw(fileName,univName,yNDF=None):
         profile.SetLineColor(ROOT.kBlue)
         profile.SetMarkerStyle(0)
         profile.Draw("SAME")
-        profile.ProjectionX("_px","C=E").Draw("HIST SAME")
+        #profile.ProjectionX("_px","C=E").Draw("HIST SAME")
 
-    profileMC = myFile.Get(chi2SummaryDir).Get(meanMCChi2ProfileName)
-    if profileMC:
-        profileMC.SetTitle("Mean MC Chi2")
-        profileMC.SetLineWidth(lineWidth)
-        profileMC.SetLineColor(ROOT.kRed)
-        profileMC.SetMarkerStyle(0)
-        profileMC.Draw("SAME")
+    # profileMC = myFile.Get(chi2SummaryDir).Get(meanMCChi2ProfileName)
+    # if profileMC:
+    #     profileMC.SetTitle("Mean Chi2 with prior model")
+    #     profileMC.SetLineWidth(lineWidth)
+    #     profileMC.SetLineColor(ROOT.kRed)
+    #     profileMC.SetMarkerStyle(0)
+    #     profileMC.Draw("SAME")
   
     median = myFile.Get(chi2SummaryDir).Get(medianHistName)
     if median:
@@ -103,7 +105,7 @@ def draw(fileName,univName,yNDF=None):
     #while I must Draw() it first to set the right axis limits.
     leg = ROOT.TLegend(0.6, 0.6, 0.9, 0.9)
     leg.AddEntry(profile)
-    leg.AddEntry(profileMC)
+    #leg.AddEntry(profileMC)
     leg.AddEntry(median)
     leg.AddEntry(ndfLine, "Number of Bins", "l")
     leg.AddEntry(doubleNDFLine, "2x Number of Bins", "l")

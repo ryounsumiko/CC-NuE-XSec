@@ -61,7 +61,7 @@ def plotRecoKin(mc, chainwrapper, outfile):
             if not universe.IsVerticalOnly():
                 kin_cal.CalculateKinematics(universe)
                 eventClassifier.Classify(universe)
-
+ 
             if eventClassifier.side_band is not None:
                 for entry in Plots:
                     entry.Process(universe)
@@ -87,7 +87,7 @@ def plotTruthKin(chainwrapper,outfile):
         univ.LoadTools(kin_cal,eventClassifier)
 
     nEvents = chainwrapper.GetEntries()
-    #output_file = ROOT.TFile.Open(outname,"RECREATE")
+    #output_file = ROOT.TFile.Open(outname,"RECREATE") 
     Plots = prepareTruthPlots(universes)
     if AnalysisConfig.testing and nEvents > 1000:
         nEvents = 1000
@@ -98,7 +98,7 @@ def plotTruthKin(chainwrapper,outfile):
 
         for universe in chain.from_iterable(iter(universes.values())):
             universe.SetEntry(counter)
-            if mc and AnalysisConfig.skip_2p2h and universe.mc_intType==8:
+            if AnalysisConfig.skip_2p2h and universe.mc_intType==8:
                 continue
 
             #only no lateral shifts in truth quantity

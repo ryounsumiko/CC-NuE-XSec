@@ -257,10 +257,10 @@ HISTS_TO_MAKE = [
      "cuts": [lambda event : 0.2<= event.kin_cal.reco_visE < 0.5],
      },
 
-    {"variables":["Visible Zoomin","Lepton Energy"],
-     "tags": {"truth_class","sideband"},
-     "cuts":[lambda event: event.kin_cal.reco_q2_QE<0.02, lambda event: event.kin_cal.reco_Etheta2<0.0032]
-     },
+    # {"variables":["Visible Zoomin","Lepton Energy"],
+    #  "tags": {"truth_class","sideband"},
+    #  "cuts":[lambda event: event.kin_cal.reco_q2_QE<0.02, lambda event: event.kin_cal.reco_Etheta2<0.0032]
+    #  },
 
     # {"variables":["Lepton Energy","Q3"],
     #  "tags": {"truth_class","sideband"},
@@ -275,18 +275,18 @@ HISTS_TO_MAKE = [
     #  "tags": {"truth_class","sideband"},
     #  },
 
-    {"variables":["Lepton Energy"],
-     "tags": {"truth_class","sideband"},
-     "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
-     },
-     {"variables":["Biased Neutrino Energy"],
-     "tags": {"truth_class","sideband"},
-      "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
-     },
-     {"variables":["Visible Energy","Lepton Energy"],
-     "tags": {"truth_class","sideband"},
-      "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
-     },
+    # {"variables":["Lepton Energy"],
+    #  "tags": {"truth_class","sideband"},
+    #  "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
+    #  },
+    #  {"variables":["Biased Neutrino Energy"],
+    #  "tags": {"truth_class","sideband"},
+    #   "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
+    #  },
+    #  {"variables":["Visible Energy","Lepton Energy"],
+    #  "tags": {"truth_class","sideband"},
+    #   "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
+    #  },
 
     # {"variables":["PsiEe","Lepton Theta"],
     #  "tags":{"sideband","truth_class","mc_only"},
@@ -333,7 +333,7 @@ HISTS_TO_MAKE = [
     #  "tags":{"truth_class","sideband"}},
     # {"variables": ["Vertex Energy","Lepton Energy"],
     #  "tags":{"truth_class","sideband"}},
-    "True Neutrino Energy",
+    # "True Neutrino Energy",
     # {"variables": ["Euv"],
     #  "tags":{"truth_class","sideband"}},
     # {"variables": ["Exuv"],
