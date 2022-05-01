@@ -305,6 +305,7 @@ parser.add_argument("--only_cal_POT","--only-cal-POT",
 parser.add_argument("--exclude_universes","--exclude-universes",
                     help="do not want some systematics universes, list their ShortName()",
                     nargs="*",
+                    default=["lateral"]
 )
 
 parser.add_argument("--skip_2p2h","--skip_2p2h",

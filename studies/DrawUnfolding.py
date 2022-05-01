@@ -35,60 +35,13 @@ def SubtractPoissonHistograms(h,h1,pseudo_data=False):
     return h
 
 
-def MakePlot(data_hists,mc_hists,config):
-    #scale
-    if "scale" in config:
-        config["scale"](data_hists)
-        config["scale"](mc_hists)
-    else:
-        Default_Scale(data_hists)
-        Default_Scale(mc_hists)
-    CanvasConfig = config.setdefault("canvasconfig",lambda x:True)
-    PlotType = config.setdefault("plot_type",Default_Plot_Type)
-    slicer = config.setdefault("slicer", DefaultSlicer(data_hists))
-    draw_seperate_legend = config.setdefault("draw_seperate_legend",data_hists.dimension!=1 and PlotType != "migration")
-    try:
-        custom_tag = config["tag"]+PlotType if "tag" in config else PlotType+"unfolded"
-        if PlotType == "custom":
-            plotfunction,hists=config["getplotters"](data_hists,mc_hists)
-        else:
-            if "args" in config:
-                args = config["args"]
-            elif "args" in DefaultPlotters[PlotType]:
-                args = DefaultPlotters[PlotType]["args"]
-            else:
-                args = None
-            if args is None:
-                plotfunction,hists = DefaultPlotters[PlotType]["func"](data_hists,mc_hists)
-            else:
-                plotfunction,hists = DefaultPlotters[PlotType]["func"](data_hists,mc_hists,*args)
-            PlotTools.MakeGridPlot(slicer,plotfunction,hists,CanvasConfig,draw_seperate_legend)
-            PlotTools.Print(AnalysisConfig.PlotPath(data_hists.plot_name,sideband,custom_tag))
-            print("plot {} made.".format(data_hists.plot_name))
-    except KeyError as e:
-        print("plot {} not made.".format(data_hists.plot_name))
-        print(e)
-        return False
-    return True
-
-
-class unfolder(object):
-    def __init__(**kwargs):
-        pass
-
-    def unfold():
-        pass
-
-    def backgroundFit():
-        pass
-
 def GetMigrationHistograms(mc_file, name):
     migration_hist = Utilities.GetHistogram(mc_file,PLOT_SETTINGS[name]["name"])
     migration_reco = Utilities.GetHistogram(mc_file,PLOT_SETTINGS[name]["name"]+"_reco")
     migration_truth = Utilities.GetHistogram(mc_file,PLOT_SETTINGS[name]["name"]+"_truth")
     return (migration_hist,migration_reco,migration_truth)
 
-def unfolding(hist_to_unfold,migration,mc_reco,true_signal,mc_truth):
+def unfolding(hist_to_unfold,migration,mc_reco,true_signal,mc_truth,iteration_i):
     cov = ROOT.TMatrixD(1,1)
     hist_to_unfold.AddMissingErrorBandsAndFillWithCV(mc_reco)
     migration.AddMissingErrorBandsAndFillWithCV(hist_to_unfold)
@@ -96,36 +49,27 @@ def unfolding(hist_to_unfold,migration,mc_reco,true_signal,mc_truth):
     mc_truth.AddMissingErrorBandsAndFillWithCV(hist_to_unfold)
     data = hist_to_unfold.Clone()
     unfolded3 = true_signal.Clone()
-    MNVUNFOLD.UnfoldHistoWithFakes(unfolded3,cov,migration,data,mc_reco,ROOT.nullptr,ROOT.nullptr,REGULATION_PARAMETERS[plot],True,True)
+    MNVUNFOLD.UnfoldHistoWithFakes(unfolded3,cov,migration,data,mc_reco,ROOT.nullptr,ROOT.nullptr,iteration_i,True,True)
+    del data
     return unfolded3
 
-def DrawPostUnfolding(data_hist1,data_hist2):
-    CanvasConfig = lambda x:True
-    slicer = DefaultSlicer(data_hists)
-    draw_seperate_legend = data_hists.dimension!=1
-    plotfunction = lambda mnvplotter, data_hist, mc_hist: mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,1.0,"TR")
-    hists = [data_hist2.GetCVHistoWithError(),data_hist1.GetCVHistoWithError()]
-    PlotTools.updatePlotterErrorGroup(CONSOLIDATED_ERROR_GROUPS)
 
-    PlotTools.MakeGridPlot(slicer,plotfunction,hists,CanvasConfig,draw_seperate_legend)
-    PlotTools.Print(AnalysisConfig.PlotPath(data_hists.plot_name,"Signal","comp_unfolded_"+background_scale_tag))
-    plotfunction = lambda mnvplotter,data_hist, mc_hist: mnvplotter.DrawDataMCRatio(data_hist, mc_hist, 1.0 ,True,0,2)
-    PlotTools.MakeGridPlot(slicer,plotfunction,hists,CanvasConfig,draw_seperate_legend)
-    PlotTools.Print(AnalysisConfig.PlotPath(data_hists.plot_name,"Signal","ratio_unfolded_"+background_scale_tag))
+def IterationDrawer(mnvplotter,mc_ref,*iters,titles):
+    colors = ROOT.MnvColors.GetColors()
+    leg = ROOT.TLegend(0.6, 0.1, 0.9, 0.9)
+    ROOT.SetOwnership(leg,False)
+    for i,v in enumerate(iters):
+        v.Divide(v,mc_ref)
+        v.SetLineColor(colors[i])
+        v.SetMaximum(2)
+        #i.SetMinimum(0)
+        v.Draw("HIST SAME")
+        leg.AddEntry(v,titles[i])
+    leg.Draw()
 
-    PlotTools.MNVPLOTTER.axis_maximum = 0.5
-    plotfunction = lambda mnvplotter,data_hist: mnvplotter.DrawErrorSummary(data_hist)
-    hists = [data_hist1]
-    PlotTools.MakeGridPlot(slicer,plotfunction,hists,CanvasConfig,draw_seperate_legend)
-    PlotTools.Print(AnalysisConfig.PlotPath(data_hists.plot_name,"Signal","err1_unfolded_"+background_scale_tag))
-    hists = [data_hist2]
-    PlotTools.MakeGridPlot(slicer,plotfunction,hists,CanvasConfig,draw_seperate_legend)
-    PlotTools.MNVPLOTTER.axis_maximum = -1111
-    PlotTools.Print(AnalysisConfig.PlotPath(data_hists.plot_name,"Signal","err2_unfolded_"+background_scale_tag))
-    data_hist1.GetTotalErrorMatrix().Draw("COLZ")
-    PlotTools.Print(AnalysisConfig.PlotPath(data_hists.plot_name,"Signal","err1matrix_unfolded_"+background_scale_tag))
-    data_hist2.GetTotalErrorMatrix().Draw("COLZ")
-    PlotTools.Print(AnalysisConfig.PlotPath(data_hists.plot_name,"Signal","err2matrix_unfolded_"+background_scale_tag))
+    # size = len(iters)+1
+    # titles = ["mc"]+[h.GetTitle() for h in iters]
+    # PlotTools.MakeModelVariantPlot(mc_ref,iters,color=colors[:size],title=titles)
 
 
 if __name__ == "__main__":
@@ -169,11 +113,24 @@ if __name__ == "__main__":
         signal_background[0].Scale(pot_scale)
         data = data_hists.GetHist()
         SubtractPoissonHistograms(data, signal_background[0],True)
-        unfolded = unfolding(data,migration_hists[0],migration_hists[1],true_signal.GetHist(),migration_hists[2])
-        #unfolded = unfold(plot,data)
-        unfolded_file.cd()
-        unfolded.Write(data_hists.plot_name+"_bkg_unfolding")
-        #unfolded.Scale(1,"width")
-        DrawPostUnfolding(unfolded,migration_hists[2])
+        _,_,mc_ref = GetMigrationHistograms(mc_file,migration_name)
+        mc_ref.GetYaxis().SetTitle("q_{3}" if plot.split()[-1]=="q3" else "P^{t}_{lep}")
+        mc_ref.Scale(pot_scale)
+        unfolded_list = []
+        titles = []
+        for i in range(1,16,2):
+            unfolded_list.append( unfolding(data,migration_hists[0],migration_hists[1],true_signal.GetHist(),migration_hists[2],i))
+            titles.append("iter{}".format(i))
 
+        drawer = partial(IterationDrawer,titles=titles)
+
+        print("making plot")
+        PlotTools.MakeGridPlot(PlotTools.Make2DSlice,drawer,[mc_ref,*unfolded_list],draw_seperate_legend=True)
+        PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"unfolding_iters"))
+        #unfolded = unfold(plot,data)
+        # unfolded_file.cd()
+        # unfolded.Write(data_hists.plot_name+"_bkg_unfolding")
+        #unfolded.Scale(1,"width")
+        del unfolded_list
+    print("done")
     unfolded_file.Close()

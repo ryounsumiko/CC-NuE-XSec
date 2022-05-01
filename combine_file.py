@@ -21,6 +21,7 @@ def AddOneFile(input_string,output_string, pot_scale):
     keylist = input_file.GetListOfKeys()
     for key in keylist:
         hist = input_file.Get(key.GetName())
+        #hist.SetDirectory(None)
         if isinstance(hist,ROOT.TTree):
             continue
         hist.Scale(pot_scale)
@@ -36,7 +37,9 @@ def AddOneFile(input_string,output_string, pot_scale):
     del keylist
     input_file.Clear()
     input_file.Close()
+    output_file.Close()
     del input_file
+    del output_file
     print("done a file")
 
 def MaddWrapper(output_playlist,input_files,is_data):

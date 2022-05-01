@@ -194,7 +194,7 @@ class EelTuningWeight(MyWeighterBase):
 class RHCNewWeight(MyWeighterBase):
     def __init__(self):
         super(RHCNewWeight,self).__init__( lambda universe:universe.kin_cal.reco_E_lep)
-        self.f = ROOT.TFile.Open("{}/background_fit/rhc_Ee_tune.root".format(os.environ["CCNUEROOT"]))
+        self.f = ROOT.TFile.Open("{}/background_fit/bkgfit_NoScaleCollab.root".format(os.environ["CCNUEROOT"]))
         # self.fFHC = ROOT.TFile.Open("{}/background_fit/bkgfit_pi0Nrhc.root".format(os.environ["CCNUEROOT"]))
         self.hist_dict = {i:self.f.Get(i) for i in ["Excess","NCCoh","Signal"]}
         # self.hist_dict["Signal"] = self.fFHC.Get("Signal")
@@ -249,8 +249,8 @@ class RHCWrongSignEstimatorWeight(DataWeight):
 class PtTuningWeight(MyWeighterBase):
     def __init__(self):
         super(PtTuningWeight,self).__init__( lambda universe:universe.kin_cal.reco_Pt_lep)
-        self.f = ROOT.TFile.Open("{}/background_fit/tune3-Eel.root".format(os.environ["CCNUEROOT"]))
-        self.hist_dict = {i:self.f.Get(i) for i in ["Pi0"]}
+        self.f = ROOT.TFile.Open("{}/background_fit/tune2-Eel.root".format(os.environ["CCNUEROOT"]))
+        self.hist_dict = {i:PlotUtils.MnvH1D(self.f.Get(i).GetCVHistoWithStatError()) for i in ["Pi0"]}
 
         self.cate_map["NCDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["Pi0"])
         self.cate_map["CCDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["Pi0"])
@@ -270,14 +270,23 @@ class RHCPtTuningWeight(MyWeighterBase):
         self.cate_map["CCNuEDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
         self.cate_map["CCNuE"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
 
+class WrongSignPtTuningWeight(MyWeighterBase):
+    def __init__(self):
+        super(WrongSignPtTuningWeight,self).__init__( lambda universe:universe.kin_cal.reco_Pt_lep)
+        self.f = ROOT.TFile.Open("{}/background_fit/bkgfit_EePtScaleCollab.root".format(os.environ["CCNUEROOT"]))
+        self.hist_dict = {i:self.f.Get(i) for i in ["Pi0"]}
+
+        self.cate_map["NCDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["Pi0"])
+        self.cate_map["CCDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["Pi0"])
 
 class PtTuningWeightAlt(MyWeighterBase):
     def __init__(self):
         super(PtTuningWeightAlt,self).__init__( lambda universe:universe.kin_cal.reco_Pt_lep)
         self.f = ROOT.TFile.Open("{}/background_fit/tune1-Eel.root".format(os.environ["CCNUEROOT"]))
-        self.hist_dict = {i:self.f.Get(i) for i in ["Excess","Pi0","Signal"]}
+        self.hist_dict = {i:PlotUtils.MnvH1D(self.f.Get(i).GetCVHistoWithStatError()) for i in ["Excess","Pi0","Signal","NCCoh"]}
 
         self.cate_map["ExcessModel"] = partial(self.fileBasedWeight,hist=self.hist_dict["Excess"])
+        self.cate_map["NCCoh"] = partial(self.fileBasedWeight,hist=self.hist_dict["NCCoh"])
         self.cate_map["NCDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["Pi0"])
         self.cate_map["CCDIS"] = partial(self.fileBasedWeight,hist=self.hist_dict["Pi0"])
         self.cate_map["CCNuEQE"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
@@ -287,7 +296,7 @@ class PtTuningWeightAlt(MyWeighterBase):
         self.cate_map["CCNuE"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
 
 
-class RHCEelPtTuningWeight():
+class RHCEelPtTuningWeight(object):
     def __init__(self):
         self.EelWeight = RHCNewWeight()
         self.PtWeight = RHCPtTuningWeight()
@@ -295,7 +304,7 @@ class RHCEelPtTuningWeight():
     def GetWeight(self,universe):
         return self.EelWeight.GetWeight(universe)*self.PtWeight.GetWeight(universe)
 
-class FHCPtTuningWeight():
+class FHCPtTuningWeight(object):
     def __init__(self):
         self.CVWeight = RHCEelPtTuningWeight()
         self.FHCWeight = PtTuningWeight()
@@ -306,7 +315,7 @@ class FHCPtTuningWeight():
     def GetWeight(self,universe):
         return self.CVWeight.GetWeight(universe)* (self.FHCWeight.GetWeight(universe) if self.cut(universe) else 1)
 
-class FHCPtTuningWeightAlt():
+class FHCPtTuningWeightAlt(object):
     def __init__(self):
         self.RHCWeight = RHCEelPtTuningWeight()
         self.FHCWeight = PtTuningWeightAlt()
@@ -314,6 +323,14 @@ class FHCPtTuningWeightAlt():
     def GetWeight(self,universe):
         return self.RHCWeight.GetWeight(universe)*self.FHCWeight.GetWeight(universe)
 
+class RHCWrongSignBkgWeight(object):
+    def __init__(self):
+        self.Wrongsign = RHCWrongSignEstimatorWeight() #rhc->fhc weight
+        self.RHCPtWeight = WrongSignPtTuningWeight() #pi^0 weight
+        self.RHCEelWeight = RHCNewWeight() # Excess weight
+
+    def GetWeight(self,universe):
+        return self.Wrongsign.GetWeight(universe)* self.RHCPtWeight.GetWeight(universe)* self.RHCEelWeight.GetWeight(universe)
 
 
 if AnalysisConfig.extra_weighter is None:
@@ -333,7 +350,7 @@ elif AnalysisConfig.extra_weighter =="FHCPt_tune2":
 elif AnalysisConfig.extra_weighter =="FHCPt_tune1":
     MyWeighter = FHCPtTuningWeightAlt()
 elif AnalysisConfig.extra_weighter =="wrong_sign":
-    MyWeighter = RHCWrongSignEstimatorWeight()
+    MyWeighter = RHCWrongSignBkgWeight()
 
 else:
     raise ValueError("Unknown extra weighter")

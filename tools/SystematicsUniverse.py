@@ -828,6 +828,11 @@ def GetAllSystematicsUniverses(chain,is_data,is_pc =False,exclude=None,playlist=
             if i in univ_dict:
                 del univ_dict[i]
 
+    if exclude is not None and "lateral" in exclude:
+        for i,v in univ_dict.items():
+            if len(v)>1 and not v[0].IsVerticalOnly:
+                del univ_dict[i]
+
     return univ_dict
 
 #code for testing new cv universe.

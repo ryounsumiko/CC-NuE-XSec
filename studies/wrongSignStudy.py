@@ -33,5 +33,5 @@ def makeRatio(hist_name):
 
 if __name__ =="__main__":
     makeRatio(hist_name)
-    
+
 

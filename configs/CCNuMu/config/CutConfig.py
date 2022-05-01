@@ -59,6 +59,8 @@ NEUTRINO_ENERGY_RANGE = [0, 100] # in GeV.
 ELECTRON_ANGLE_RANGE = [0, 20] # in deg
 RECO_Q3_RANGE = [0,1.2]
 TRUE_Q3_RANGE = [0,1.2]
+RECO_PT_RANGE = [0,1.0]
+RECO_VISE_RANGE = [0,1.2]
 
 WEXP_CUT = 2
 Reco_visEcut = 2
@@ -200,7 +202,9 @@ KINEMATICS_CUTS = [
     "LeptonEnergy",
     "LeptonAngle",
     #"NeutrinoEnergy",
-    "Q3"
+    #"Q3",
+    "Pt",
+    "Eavail"
 ]
 #######################################
 

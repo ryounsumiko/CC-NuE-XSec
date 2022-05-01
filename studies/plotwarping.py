@@ -58,6 +58,8 @@ def draw(fileName,univName,yNDF=None):
         spread.SetTitle("Universe: " + univName)
         spread.SetTitleOffset(0.75, "X")
         spread.SetTitleOffset(0.65, "Y")
+        if "CV" in fileName:
+            spread.GetYaxis().SetRangeUser(0,150)
         spread.Draw("colz")
 
     profile = myFile.Get(chi2SummaryDir).Get(meanChi2ProfileName)
@@ -212,8 +214,8 @@ if __name__ =="__main__":
     
     plotpathroot = "/minerva/data/users/hsu/nu_e/plot/warping/"
     target = ["Eavail_Lepton_Pt","Eavail_q3"]
-    #model = ["CV","SuSA2p2h"]
-    model = ["CV","MK_Model", "FSI_Weight0", "FSI_Weight1", "FSI_Weight2","SuSA2p2h", "LowQ2Pi_NUPi0","LowQ2Pi_Joint","2p2h0","2p2h1","2p2h2","RPA_highq20","RPA_lowq20","RPA_highq21","RPA_lowq21","GenieMaCCQE_UP","GenieMaCCQE_DOWN"]
+    model = ["CV"]
+    #model = ["CV","MK_Model", "FSI_Weight0", "FSI_Weight1", "FSI_Weight2","SuSA2p2h", "LowQ2Pi_NUPi0","LowQ2Pi_Joint","2p2h0","2p2h1","2p2h2","RPA_highq20","RPA_lowq20","RPA_highq21","RPA_lowq21","GenieMaCCQE_UP","GenieMaCCQE_DOWN"]
     Iterations = [i for i in range(0,15)]
     can = ROOT.TCanvas("c1","c1",960,720)
     ROOT.gStyle.SetOptStat(0)
@@ -221,7 +223,7 @@ if __name__ =="__main__":
     for i in hists:
         for j in target:
             for k in model:
-                for l in [-1]:#,0,1]:
+                for l in [-1]:#,1,2]:
                     path = "/pnfs/minerva/scratch/users/hsu/{}/transWrap_{}{}_{}.root".format(i,k,j,l)
                     draw(path,k)
                     draw3(path,k,15 if target == "Eavail_q3" else 10)

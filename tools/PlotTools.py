@@ -81,13 +81,45 @@ def PrepareSignalDecompose(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_da
         return hnew
 
     if (data_hists.valid and mc_hists.valid):
-        hists = [data_hists.GetHist().GetCVHistoWithError() if sys_on_data else data_hists.GetHist().GetCVHistoWithStatError()]
+        hists = [data_hists.GetHist() if sys_on_data else data_hists.GetHist().GetCVHistoWithStatError()]
         cate_hists,colors,titles  = mc_hists.GetCateList(cates)
         if only_cated :
             totalHist = ReSumHists(cate_hists)
         else:
             totalHist = mc_hists.GetHist()
         hists.append(totalHist.GetCVHistoWithError() if sys_on_mc else totalHist.GetCVHistoWithStatError())
+        hists.extend(cate_hists)
+        plotfunction = lambda mnvplotter,data_hist, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles)(data_hist,mc_hist,mc_ints)
+    elif mc_hists.valid:
+        cate_hists,colors,titles  = mc_hists.GetCateList(cates)
+        if only_cated :
+            totalHist = ReSumHists(cate_hists)
+        else:
+            totalHist = mc_hists.GetHist()
+        hists = [totalHist.GetCVHistoWithError() if sys_on_mc else totalHist.GetCVHistoWithStatError()]
+        hists.extend(cate_hists)
+        plotfunction = lambda mnvplotter, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles)(None,mc_hist,mc_ints)
+    else:
+        raise KeyError("Non sense making signal decomposition plots without mc")
+    return plotfunction,hists
+
+def PrepareSignalDecomposeDoubleError(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_data = False,only_cated = False):
+    def ReSumHists(h_list):
+        if len(h_list) == 0:
+            return None
+        hnew = h_list[0].Clone()
+        for i in range(1,len(h_list)):
+            hnew.Add(h_list[i])
+        return hnew
+
+    if (data_hists.valid and mc_hists.valid):
+        hists = [data_hists.GetHist() if sys_on_data else PlotUtils.MnvH2D(data_hists.GetHist().GetCVHistoWithStatError())]
+        cate_hists,colors,titles  = mc_hists.GetCateList(cates)
+        if only_cated :
+            totalHist = ReSumHists(cate_hists)
+        else:
+            totalHist = mc_hists.GetHist()
+        hists.append(PlotUtils.MnvH2D(totalHist.GetCVHistoWithError()) if sys_on_mc else totalHist.GetCVHistoWithStatError())
         hists.extend(cate_hists)
         plotfunction = lambda mnvplotter,data_hist, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles)(data_hist,mc_hist,mc_ints)
     elif mc_hists.valid:
@@ -176,7 +208,7 @@ def PrepareErrorBand(data_hists,mc_hists, name, sys_on_mc=True,sys_on_data=False
         raise KeyError("Can't make error plot for systematics config mismatch")
     return plotfunction,hists
 
-def PrepareStack(data_hists,mc_hists,Grouping = None):
+def PrepareStack(data_hists,mc_hists,Grouping = None,errorband=None):
     if not mc_hists.valid:
         raise KeyError("Doesn't make sense to plot stacked histogram without MC")
     mc_list,color,title = mc_hists.GetCateList(Grouping)
@@ -188,6 +220,8 @@ def PrepareStack(data_hists,mc_hists,Grouping = None):
         tmp = mc_hists.GetHist().Clone()
         tmp.Reset()
         hists =[tmp]
+    if errorband is not None:
+        mc_list = [PlotUtils.MnvH2D(h.GetVertErrorBand(errorband[0]).GetHist(errorband[1])) for h in mc_list]
     hists.extend(mc_list)
     return plotfunction,hists
 
@@ -255,7 +289,7 @@ def AdaptivePlotterErrorGroup(hist,result,mnvplotter=MNVPLOTTER):
 def CalMXN(N_plots,max_horizontal_plot = 4):
     height = math.ceil(1.0*N_plots/max_horizontal_plot)  #hard code max 3 plots per line
     width = math.ceil(N_plots/height) #number of plots per line
-    return int(width),int(height)
+    return int(width),int(height),0,0  # the last two are margins. Sorry has to hack
 
 def Make2DSlice(hist2D_o, X_slice=False, bin_start = 1 , bin_end = 0,interval = 1):
     # x slice true produce 1d histograms of Y variable for each x variable bins.
@@ -319,7 +353,12 @@ def MakeModelVariantPlot(data_hist, mc_hists, color=None, title=None,legend ="TR
 
 def MakeSignalDecomposePlot(data_hist, mc_hist, mc_hists, title, color, pot_scale = 1.0, mnvplotter=MNVPLOTTER,canvas=CANVAS):
     if data_hist is not None:
-        mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,pot_scale,"TR")
+        try:
+            mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,pot_scale,"TR",False,ROOT.nullptr,ROOT.nullptr,False,True)
+        except:
+            print ("failed plotting double error, plotting sys+stat.")
+            mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,pot_scale,"TR")
+        
     else:
         mnvplotter.DrawMCWithErrorBand(mc_hist,pot_scale)
     TLeg = GetTLegend(ROOT.gPad)
@@ -353,7 +392,7 @@ def MakeGridPlot(MakingSlice,MakingEachPlot,input_hists,CanvasConfig=lambda canv
         canvas.SetLeftMargin(0)
     slices = list(map(lambda *args: args, *list(map(MakingSlice,input_hists))))
     N_plots = len(slices)
-    canvas.Divide(*CalMXN(N_plots+int(draw_seperate_legend)),0,0)
+    canvas.Divide(*CalMXN(N_plots+int(draw_seperate_legend)))
     for i in range(N_plots):
         canvas.cd(i+1)
         tcanvas = canvas.GetPad(i+1)

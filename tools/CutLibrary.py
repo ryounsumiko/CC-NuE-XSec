@@ -315,6 +315,17 @@ KINEMATICS_CUT_CONFIGS = {
         "variable_range": [0.1*i for i in range(0,21)]
     },
 
+    "RecoPt": {
+        "value_getter": lambda event,nprong: event.kin_cal.reco_Pt_lep,
+        "cut_fn": lambda val: CutConfig.RECO_PT_RANGE[0] <= val < CutConfig.RECO_PT_RANGE[1],
+        "variable_range": [0.1*i for i in range(0,21)]
+    },
+     "RecoEavail": {
+        "value_getter": lambda event,nprong: event.kin_cal.reco_visE,
+        "cut_fn": lambda val: CutConfig.RECO_VISE_RANGE[0] <= val < CutConfig.RECO_VISE_RANGE[1],
+        "variable_range": [0.1*i for i in range(0,21)]
+     },
+
     "TrueLeptonEnergy": {
         "value_getter": lambda event,nprong: event.kin_cal.true_E_lep,
         "cut_fn": lambda val: CutConfig.ELECTRON_ENERGY_RANGE[0] <= val < CutConfig.ELECTRON_ENERGY_RANGE[1],
@@ -332,6 +343,17 @@ KINEMATICS_CUT_CONFIGS = {
     "TrueQ3": {
         "value_getter": lambda event,nprong: event.kin_cal.true_q3,
         "cut_fn": lambda val: CutConfig.TRUE_Q3_RANGE[0] <= val < CutConfig.TRUE_Q3_RANGE[1],
+        "variable_range": [0.1*i for i in range(0,21)]
+    },
+
+    "TruePt": {
+        "value_getter": lambda event,nprong: event.kin_cal.true_pt,
+        "cut_fn": lambda val: CutConfig.RECO_PT_RANGE[0] <= val < CutConfig.RECO_PT_RANGE[1],
+        "variable_range": [0.1*i for i in range(0,21)]
+    },
+     "TrueEavail": {
+        "value_getter": lambda event,nprong: event.kin_cal.true_visE,
+        "cut_fn": lambda val: CutConfig.RECO_VISE_RANGE[0] <= val < CutConfig.RECO_VISE_RANGE[1],
         "variable_range": [0.1*i for i in range(0,21)]
     },
 }

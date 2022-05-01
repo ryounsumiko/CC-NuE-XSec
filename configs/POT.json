@@ -124,6 +124,9 @@
             "MAD": {
                 "tree": "MasterAnaDev",
                 "playlist_location": "file_option/playlist_ccqenue_mcme1D_nx_MAD.txt"
+            },
+            "MADtp2": {
+                "playlist_location": "file_option/playlist_ccqenue_mcme1D_nx_MADtp2.txt"
             }
         }
     },

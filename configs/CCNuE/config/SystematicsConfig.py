@@ -104,7 +104,7 @@ RPA_UNIVERSES = {
 
 NonResPi=True
 LowQ2PiWeightChannel = "Joint"
-LowQ2PiWeightSysChannel = ["NUPI0"]
+LowQ2PiWeightSysChannel = [None]
 NumZExpansionUniverses = 0 #Means Don't use Zexpansion. 100 is default Z expansion
 
 RESPONSE_BRANCHES = [
@@ -237,7 +237,8 @@ DETECTOR_RESPONSE_ERROR_GROUPS = {
     "EM energy scale": ["elE_ECAL","elE_HCAL"],
     "Birk's Constant" : ["birks"],
     "Particle Response":["response_"+i for i in RESPONSE_BRANCHES],
-    "Leakage Estimation" : ["Leakage_Uncertainty"]
+    "Leakage Estimation" : ["Leakage_Uncertainty"],
+    "Target Mass" : ["Target_Mass_CH"]
 }
 
 MINERVA_TUNNING_ERROR_GROUPS = {

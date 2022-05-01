@@ -9,14 +9,14 @@ from functools import partial
 
 
 ROOT.TH1.AddDirectory(False)
-numufile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx1_muon_MAD.root"
-nuefile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx1_electron_MAD.root"
-nuesignalrichfile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_BigNuE1_electron_MAD.root"
-nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_electron_MAD.root"
-nuedatafile = "/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_electron_MAD.root"
+numufile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx2_muon_MAD.root"
+nuefile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx2_electron_MAD.root"
+nuesignalrichfile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_BigNuE2_electron_MAD.root"
+nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx1_electron_MAD.root"
+nuedatafile = "/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx2_electron_MAD.root"
 numuweightedfile =  {
-    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx1_muon_true_weighted_MAD.root",
-    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx1_muon_weighted_MAD.root"
+    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx2_muon_true_weighted_MAD.root",
+    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx2_muon_weighted_MAD.root"
 }
 
 MU_SIGNALS = ["CCQE","CCDelta","CC2p2h","CCDIS","CCOther"]
@@ -89,6 +89,7 @@ def MakeScaleFile(hist_names):
         hmu.AddMissingErrorBandsAndFillWithCV(he)
         hmu.Scale(esignalrichPOT/muPOT)
         Fout.cd()
+        print([h.GetBinContent(3) for h in [he,hmu]])
         he.Divide(he,hmu)
         he.Write(hist_name)
     fe.Close()
@@ -237,6 +238,11 @@ def MakeCompPlot():
             hcomps.append(GetSignalHist(histfile,[i],hist_name))
         return PlotTools.Ratio(hcomps,htotal,"B")
 
+    def DrawEfficiency(mnvplotter,henu,hede,hmunu,hmude,canvas=PlotTools.CANVAS):
+        henu.Divide(henu,hede,1,1,"B")
+        hmunu.Divide(hmunu,hmude,1,1,"B")
+        Draw(mnvplotter,henu,hmunu)
+
 
     nueMCfile,nueMCPOT = getFileAndPOT(nuefile)
     nueMCsignalfile,nueMCsignalPOT = getFileAndPOT(nuesignalrichfile)
@@ -245,27 +251,28 @@ def MakeCompPlot():
     numuMCfile,numuMCPOT = getFileAndPOT(numuweightedfile["mc"])
     numuDatafile,numuDataPOT = getFileAndPOT(numuweightedfile["data"])
     nueDatafile,nueDataPOT = getFileAndPOT(nuedatafile)
+    numuMCrawfile,numuMCrawDataPOT = getFileAndPOT(numufile)
     print (nueMCPOT,numuDataPOT,numuMCPOT,nueDataPOT)
 
     for hist_name in [ "Eavail_q3", "Enu" ,"Eavail_Lepton_Pt","Q3","Q0","tQ0","tQ3","tLepton_Pt","tQ0_tQ3","tQ0_tLepton_Pt","Eavail","tEavail","tEavail_tQ3","tEavail_tLepton_Pt","Lepton_Pt","tEnu","Eavail_q3_true_signal", "Eavail_Lepton_Pt_true_signal", "tEnu_true_signal"]:
         try:
             he = GetSignalHist(nueMCsignalfile,E_SIGNALS,hist_name)
             hmu = GetSignalHist(numuMCfile,MU_SIGNALS,hist_name)
-            hebkg = GetSignalHist(nueBkgfile,E_BACKGROUNDS,hist_name)
-            hmubkg = GetSignalHist(numuMCfile,MU_BACKGROUNDS,hist_name)
         except :
             print ("hist: {} not found".format(hist_name))
             continue
         hmu.Scale(numuDataPOT/numuMCPOT)
         he.Scale(numuDataPOT/nueMCsignalPOT)
-        hebkg.Scale(numuDataPOT/nueBkgPOT)
-        hmubkg.Scale(numuDataPOT/numuMCPOT)
         hmudata = numuDatafile.Get(hist_name)
         if hmudata:
+            hmubkg = GetSignalHist(numuMCfile,MU_BACKGROUNDS,hist_name)
+            hmubkg.Scale(numuDataPOT/numuMCPOT)
             SubtractPoissonHistograms(hmudata,hmubkg)
         hedata = nueDatafile.Get(hist_name)
         if hedata:
             hedata.Scale(numuDataPOT/nueDataPOT)
+            hebkg = GetSignalHist(nueBkgfile,E_BACKGROUNDS,hist_name)
+            hebkg.Scale(numuDataPOT/nueBkgPOT)
             SubtractPoissonHistograms(hedata,hebkg)
 
         if "true_signal" in hist_name:
@@ -325,7 +332,19 @@ def MakeCompPlot():
         PlotTools.CANVAS.Print("{}{}_MCfractionMU.png".format(PLOTPATH,hist_name))
 
 
+    #draw efficiency:
+    for i in [("Eavail_q3","tEavail_tQ3","Eavail_q3_true_signal"),
+              ("Eavail_Lepton_Pt","tEavail_tLepton_Pt","Eavail_Lepton_Pt_true_signal")]:
+        Slicer = PlotTools.Make2DSlice
+        hes =list(map(lambda h: GetSignalHist(nueMCsignalfile,E_SIGNALS,h), i))
+        hmus = list(map(lambda h: GetSignalHist(numuMCrawfile,MU_SIGNALS,h), i))
+        PlotTools.MakeGridPlot(Slicer,DrawEfficiency,[hes[1],hes[2],hmus[1],hmus[2]],draw_seperate_legend = he.GetDimension()==2)
+        PlotTools.CANVAS.Print("{}{}_efficiency.png".format(PLOTPATH,i[0]))
+        PlotTools.MakeGridPlot(Slicer,DrawEfficiency,[hes[0],hes[2],hmus[0],hmus[2]],draw_seperate_legend = he.GetDimension()==2)
+        PlotTools.CANVAS.Print("{}{}_recoefficiency.png".format(PLOTPATH,i[0]))
+
 if __name__ == "__main__":
     MakeCompPlot()
     #MakeScaleFile(["Enu","tEnu","tEnu_true_signal"])
     #MakeScaleFile2()
+

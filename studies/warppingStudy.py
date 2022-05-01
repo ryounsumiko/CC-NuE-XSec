@@ -123,7 +123,7 @@ def ConsolidateInputs(Temp_path,mig,reco,reco_truth,data,data_truth):
     return h
   scale_dict = {
     "data","data_truth",
-    "reco","reco_truth","migration"
+    #"reco","reco_truth","migration"
   }
   f = ROOT.TFile(Temp_path,"RECREATE")
   #DoFancyTuneToMigration(mig,reco,reco_truth,data_truth,K)
@@ -151,8 +151,8 @@ def RunTransWrapper(tupleName,tag,njobs):
 
 AlternativeModels = {
   "CV":None,
-  "LowQ2Pi_Joint": ("LowQ2Pi_Joint",0),
-  "LowQ2Pi_NUPi0": ("LowQ2Pi_NUPI0",0),
+  #"LowQ2Pi_Joint": ("LowQ2Pi_Joint",0),
+  #"LowQ2Pi_NUPi0": ("LowQ2Pi_NUPI0",0),
   "2p2h0": ("Low_Recoil_2p2h_Tune",0),
   "2p2h1": ("Low_Recoil_2p2h_Tune",1),
   "2p2h2": ("Low_Recoil_2p2h_Tune",2),
@@ -163,7 +163,7 @@ AlternativeModels = {
   "MK_Model":("MK_model",0),
   #"FSI_Weight0":("fsi_weight",0),
   #"FSI_Weight1":("fsi_weight",1),
-  #"FSI_Weight2":("fsi_weight",2),
+  "FSI_Weight2":("fsi_weight",2),
   "SuSA2p2h":("SuSA_Valencia_Weight",0),
   # "Leakage0":("Leakage_Uncertainty",0),
   # "Leakage1":("Leakage_Uncertainty",1),

@@ -275,14 +275,14 @@ HISTS_TO_MAKE = [
     #  "tags": {"truth_class","sideband"},
     #  },
 
-    # {"variables":["Lepton Energy"],
-    #  "tags": {"truth_class","sideband"},
-    #  "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
-    #  },
-    #  {"variables":["Biased Neutrino Energy"],
-    #  "tags": {"truth_class","sideband"},
-    #   "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
-    #  },
+    {"variables":["Lepton Energy"],
+     "tags": {"truth_class","sideband"},
+     "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
+     },
+     {"variables":["Biased Neutrino Energy"],
+     "tags": {"truth_class","sideband"},
+      "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
+     },
     #  {"variables":["Visible Energy","Lepton Energy"],
     #  "tags": {"truth_class","sideband"},
     #   "cuts" : [lambda event:event.kin_cal.reco_q3<1.2]
