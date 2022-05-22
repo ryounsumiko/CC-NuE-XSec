@@ -166,7 +166,7 @@ VARIABLE_DICT = {
     "PsiEe" : {
         "name":"PsiEe",
         "title":"Psi * E_e (GeV)",
-        "binning": [0.2*i for i in range(21)],
+        "binning": [0.1*i for i in range(41)],
         "value_getter": lambda event: event.Psi*event.kin_cal.reco_E_lep
     },
 

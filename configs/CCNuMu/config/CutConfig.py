@@ -203,8 +203,8 @@ KINEMATICS_CUTS = [
     "LeptonAngle",
     #"NeutrinoEnergy",
     #"Q3",
-    "Pt",
-    "Eavail"
+    # "Pt",
+    # "Eavail"
 ]
 #######################################
 

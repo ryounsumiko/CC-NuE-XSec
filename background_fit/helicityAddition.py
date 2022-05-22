@@ -113,6 +113,17 @@ def DataSubtractionFHC(data_hist,mc_hist,wrong_sign_hist,ref):
     data_hist.Add(mc_hist,-1)
     data_hist.Add(wrong_sign_hist)
     return data_hist
+
+def DrawWrongSign(mnvplotter,data_hist,mc_hist):
+    data_hist.SetLineColor(ROOT.kRed-2)
+    data_hist.Draw("HIST")
+    mc_hist.SetLineColor(ROOT.kBlue-2)
+    mc_hist.Draw("HIST SAME")
+    leg = ROOT.TLegend(0.6,0.6,0.9,0.9)
+    leg.AddEntry(data_hist,"Constrained wrong sign")
+    leg.AddEntry(mc_hist,"GENIE wrong sign")
+    ROOT.SetOwnership(leg,False)
+    leg.Draw()
     
 
 if __name__ == "__main__":
@@ -161,8 +172,8 @@ if __name__ == "__main__":
 
             #drawing
             Slicer = PlotTools.Make2DSlice
-            plotfunction = lambda mnvplotter,data_hist, mc_hist: mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,1.0,"TR")
-            PlotTools.MakeGridPlot(Slicer,plotfunction,[pred,ref.hists["CCNuEAntiNu"]],draw_seperate_legend = True)
+            #plotfunction = lambda mnvplotter,data_hist, mc_hist: mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,1.0,"TR")
+            PlotTools.MakeGridPlot(Slicer,DrawWrongSign,[pred,ref.hists["CCNuEAntiNu"]],draw_seperate_legend = True)
             PlotTools.CANVAS.Print("{}{}.png".format(PLOTPATH,pred.GetName()))
     if input("Warning: Will update mc file, continue? (y/N)").upper()!="Y":
         newplaylist.Close()

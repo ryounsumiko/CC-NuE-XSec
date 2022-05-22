@@ -2,7 +2,7 @@ import ROOT
 import PlotUtils
 import sys
 import os
-
+import ctypes
 #path = "/pnfs/minerva/persistent/users/hsu/{}_hists/transWrap_{}{}_0.root".format("CCNUE_Waring5","FSI_Weight0","Eavail_Lepton_Pt")
 #path = "/minerva/app/users/hsu/cmtuser/Minerva_CCNuEAna/Ana/CCNuE/macros/Low_Recoil/studies/transWrapT_FSI_Weight0Eavail_Lepton_Pt.root"
 # c1.SetLogy(0)
@@ -28,12 +28,58 @@ chi2SummaryName = "h_chi2_modelData_trueData_iter_chi2"
 medianHistName = "h_median_chi2_modelData_trueData_iter_chi2"
 meanChi2ProfileName = "m_avg_chi2_modelData_trueData_iter_chi2"
 meanMCChi2ProfileName = "m_avg_chi2_modelData_trueMC_iter_chi2"
+avePullDir = "Average_Pull_Histograms"
+avePullHistogram="avg_Iter_{}_error"
 
 lineWidth = 3
 iterChosen = None
 
 def GetStD(hist2D):
     F=ROOT.TProfile("tf1","StdDev")
+
+
+def GetDiagonalChi2(f,template):
+    truth = f.Get(inputDir).Get("h_data_truth")
+    prof = template.Clone()
+    prof.Reset()
+    for i in [1,2,3,4,5,6,7,8,9,10,15,20,30,40,50]:
+        for u in range(0,100):
+            h_unfolded = f.Get(unfoldedDataDir).Get("Stat_{}_Iter_{}".format(u,i))
+            chi2 = GetUniverseDiagonalChi2(h_unfolded,truth)
+            #chi2 = f.Get(avePullDir).Get(avePullHistogram.format(i)).Integral()
+            prof.Fill(i-0.5,chi2)
+        print(prof.GetBinContent(1),prof.GetBinContent(3),prof.GetBinContent(5))
+    return prof
+
+
+def GetUniverseDiagonalChi2(h1,h2):
+    plotter = PlotUtils.MnvPlotter()
+    binned = ROOT.TMatrixD(1,1)
+    ndf = ctypes.c_int(1)
+    chi2 = plotter.Chi2DataMC(h1,h2,ndf,1,False,False,True,binned)
+    chi2 = sum(binned[i][i] for i in range(0,binned.GetNrows())) 
+    # chi2 =0
+    # for i in range(1,h1.GetNbinsX()+1):
+    #     for j in range(1,h1.GetNbinsY()+1):
+    #         dif = h1.GetBinContent(i,j)-h2.GetBinContent(i,j)
+    #         err = h1.GetBinError(i,j)
+    #         if h2.GetBinContent(i,j)>5:
+    #             dchi2 = (dif/err)**2
+    #         else:
+
+    #             dchi2 = 0
+    #         #print(i,j,dif,err,dchi2)
+    #         chi2+=dchi2
+    # #return chi2
+
+    # what = sum((h1.GetBinContent(i,j)-h2.GetBinContent(i,j))**2/ (h1.GetBinError(i,j)**2)
+    #             if h2.GetBinContent(i,j)>5 else 0
+    #             for i in range(0,h1.GetNbinsX()+2)
+    #             for j in range(0,h1.GetNbinsY()+2))
+    # #print(chi2,what)
+    return chi2
+    
+
 
 def draw(fileName,univName,yNDF=None):
     myFile = ROOT.TFile.Open(fileName)
@@ -70,6 +116,14 @@ def draw(fileName,univName,yNDF=None):
         profile.SetMarkerStyle(0)
         profile.Draw("SAME")
         #profile.ProjectionX("_px","C=E").Draw("HIST SAME")
+
+    diagchi2 = GetDiagonalChi2(myFile,profile)
+    if diagchi2:
+        diagchi2.SetTitle("Mean Diag Chi2")
+        diagchi2.SetLineWidth(lineWidth)
+        diagchi2.SetLineColor(ROOT.kRed)
+        diagchi2.SetMarkerStyle(0)
+        diagchi2.Draw("SAME")
 
     # profileMC = myFile.Get(chi2SummaryDir).Get(meanMCChi2ProfileName)
     # if profileMC:
@@ -111,6 +165,7 @@ def draw(fileName,univName,yNDF=None):
     leg.AddEntry(median)
     leg.AddEntry(ndfLine, "Number of Bins", "l")
     leg.AddEntry(doubleNDFLine, "2x Number of Bins", "l")
+    leg.AddEntry(diagchi2)
     if iterChosen:
         leg.AddEntry(iterLine, str(iterChosen) + " iterations", "l")
     leg.Draw()
@@ -214,8 +269,8 @@ if __name__ =="__main__":
     
     plotpathroot = "/minerva/data/users/hsu/nu_e/plot/warping/"
     target = ["Eavail_Lepton_Pt","Eavail_q3"]
-    model = ["CV"]
-    #model = ["CV","MK_Model", "FSI_Weight0", "FSI_Weight1", "FSI_Weight2","SuSA2p2h", "LowQ2Pi_NUPi0","LowQ2Pi_Joint","2p2h0","2p2h1","2p2h2","RPA_highq20","RPA_lowq20","RPA_highq21","RPA_lowq21","GenieMaCCQE_UP","GenieMaCCQE_DOWN"]
+    model = ["MnvTune-v1"]
+    #model = ["CV","MK_Model", "FSI_Weight0", "FSI_Weight1", "FSI_Weight2","SuSA2p2h", "LowQ2Pi_NUPi0","LowQ2Pi_Joint","2p2h0","2p2h1","2p2h2","RPA_highq20","RPA_lowq20","RPA_highq21","RPA_lowq21","GenieMaCCQE_UP","GenieMaCCQE_DOWN","MnvTune-v1"]
     Iterations = [i for i in range(0,15)]
     can = ROOT.TCanvas("c1","c1",960,720)
     ROOT.gStyle.SetOptStat(0)

@@ -219,11 +219,34 @@ def setAxisTitles(h,plot):
     xlabel = "E_{avail}"
     ylabel = "q_{3}" if plot.split()[-1]=="q3" else "P^{t}_{lep}"
     zlabel = "d^{{2}}#sigma/d{X}d{Y}".format(X=xlabel,Y=ylabel)
-    zlabel += " (#times 10^{39} cm^{2}/GeV^{2})"
+    zlabel += " (#times 10^{-39} cm^{2}/GeV^{2})"
     h.GetXaxis().SetTitle("{} (GeV)".format(xlabel))
     h.GetYaxis().SetTitle("{} (GeV)".format(ylabel))
     h.GetZaxis().SetTitle(zlabel)
 
+def DrawErrors(xsec,plot):
+    plotter = lambda mnvplotter, hist: mnvplotter.DrawErrorSummary(hist)
+    PlotTools.updatePlotterErrorGroup(CONSOLIDATED_ERROR_GROUPS)
+    PlotTools.MNVPLOTTER.axis_maximum = 1
+    PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec],draw_seperate_legend=True)
+    PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_err"))
+    # break downs
+    PlotTools.MNVPLOTTER.axis_maximum = 0.35
+    plotter = lambda mnvplotter, hist: mnvplotter.DrawErrorSummary(hist,"TR",False,True,0.00001,False,"Detector model")
+    PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec],draw_seperate_legend=True)
+    PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_err_det"))
+
+
+    #     PlotTools.AdaptivePlotterErrorGroup(xsec,["GENIE_MaCCQE", "GENIE_MaNCEL",
+    # "GENIE_MaRES",
+    # "GENIE_MvRES",])
+    PlotTools.updatePlotterErrorGroup(DETAILED_ERROR_GROUPS)
+    for i in ["GENIE","GENIE-FSI","MnvTunes"]:
+        plotter = lambda mnvplotter, hist: mnvplotter.DrawErrorSummary(hist,"TR",False,True,0.00001,False,i)
+        PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec],draw_seperate_legend=True)
+        PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_err_{}".format(i)))
+
+    PlotTools.MNVPLOTTER.axis_maximum = -1111
 
 if __name__ == "__main__":
     playlist= AnalysisConfig.playlist
@@ -234,7 +257,6 @@ if __name__ == "__main__":
     mc_truth_file = ROOT.TFile.Open(AnalysisConfig.SelectionHistoPath(playlist+"-BigNuE",False)) if USE_BIGNUE else None 
     xsec_file = ROOT.TFile.Open(AnalysisConfig.XSecHistoPath(playlist),"RECREATE")
     for plot in XSEC_TO_MAKE:
-        PlotTools.updatePlotterErrorGroup(CONSOLIDATED_ERROR_GROUPS)
         unfolded = Utilities.GetHistogram(unfolded_file,PLOT_SETTINGS[plot]["name"]+"_bkg_unfolding")
         efficiency = GetEfficiency(mc_reco_file,mc_truth_file,plot)
         xsec = GetXSectionHistogram(unfolded,efficiency,False)
@@ -265,19 +287,9 @@ if __name__ == "__main__":
         plotter = lambda mnvplotter, data_hist,mc_hist : mnvplotter.DrawDataMCRatio(data_hist.GetCVHistoWithError(),mc_hist.GetCVHistoWithStatError(),1.0,True,0.9,1.1)
         PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec,mc_xsec],draw_seperate_legend=True)
         PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_ratio"))
-        plotter = lambda mnvplotter, hist: mnvplotter.DrawErrorSummary(hist)
-        PlotTools.MNVPLOTTER.axis_maximum = 1
-        PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec],draw_seperate_legend=True)
-        PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_err"))
-        # PlotTools.AdaptivePlotterErrorGroup(xsec,PlotTools.TopNErrorBand(xsec,7))
-        # PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec],draw_seperate_legend=True)
-        # PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_err_top7"))
-        PlotTools.AdaptivePlotterErrorGroup(xsec,["GENIE_MaCCQE", "GENIE_MaNCEL",
-    "GENIE_MaRES",
-    "GENIE_MvRES",])
-        PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec],draw_seperate_legend=True)
-        PlotTools.Print(AnalysisConfig.PlotPath(PLOT_SETTINGS[plot]["name"],playlist,"xsec_err_top7"))
-        PlotTools.MNVPLOTTER.axis_maximum = -1111
+
+        DrawErrors(xsec,plot)
+       
 
         plotter = lambda mnvplotter,data_hist, mc_hist, *mc_ints : partial(PlotTools.MakeSignalDecomposePlot,color=colors,title=titles)(data_hist,PlotUtils.MnvH1D(mc_hist.GetCVHistoWithStatError()),mc_ints)
         PlotTools.MakeGridPlot(PlotTools.Make2DSlice,plotter,[xsec,mc_xsec,*sig_dep],draw_seperate_legend=True)

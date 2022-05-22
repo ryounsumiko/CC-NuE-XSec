@@ -18,6 +18,7 @@ from itertools import chain
 from tools import Utilities
 from config.PlotConfig import HISTS_TO_MAKE
 from config.AnalysisConfig import AnalysisConfig
+from config.SystematicsConfig import AnaNuPDG
 from tools.SystematicsUniverse import GetAllSystematicsUniverses
 from tools.EventClassification import EventClassifier
 from tools.KinematicsCalculator import KinematicsCalculator
@@ -101,6 +102,8 @@ def plotTruthKin(chainwrapper,outfile):
             if AnalysisConfig.skip_2p2h and universe.mc_intType==8:
                 continue
 
+            if abs(universe.mc_incoming)!=AnaNuPDG: #no way this is my signal. hopefully speed up processing.
+                continue 
             #only no lateral shifts in truth quantity
             if universe.ShortName()=="cv":
                 kin_cal.CalculateKinematics(universe)

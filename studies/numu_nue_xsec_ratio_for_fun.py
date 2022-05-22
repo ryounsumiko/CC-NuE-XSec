@@ -6,6 +6,16 @@ from tools import PlotTools,Utilities
 from array import array
 ROOT.TH1.AddDirectory(False)
 
+DrawMC = [
+    #"MnvTune-v3",
+    "MnvTune-v1.2",
+    "NuWro-SF",
+    #"NuWro-LFG",
+    "GENIE3-10a",
+    #"GENIE3-10b",
+    #"GENIE3-02a",
+]
+
 def xsec_ratio(mnvplotter,he,hmu,hemc,hmumc):
     he.AddMissingErrorBandsAndFillWithCV(hmu)
     hmu.AddMissingErrorBandsAndFillWithCV(he)
@@ -95,7 +105,10 @@ def RebinHistogram(h,cov):
         h_new.SetBinContent(x,2,(h.GetBinContent(2,x)+h.GetBinContent(3,x))/2)
         #print(h.GetBinContent(2,x),h.GetBinContent(3,x),h_new.GetBinContent(x,2))
         index =x*6-6+1
-        err = math.sqrt(sum(cov[a][b] for a in [index,index+1] for b in [index,index+1]))/2
+        if cov:
+            err = math.sqrt(sum(cov[a][b] for a in [index,index+1] for b in [index,index+1]))/2
+        else:
+            err = math.sqrt(h.GetBinError(2,x)**2+h.GetBinError(3,x)**2)/2
         h_new.SetBinError(x,2,err)
         h_new.SetBinContent(x,3,h.GetBinContent(4,x))
         h_new.SetBinError(x,3,h.GetBinError(4,x))
@@ -121,33 +134,41 @@ def forfun():
     PlotTools.Print("{}_xsecemu_ratio".format(name))
 
 def compXsec():
-    def Draw(mnvplotter,he,hmu,hmuME):
+    def Draw(mnvplotter,he,hmu,hmuME,*mc):
         m = max(map(lambda h: h.GetMaximum(),[he,hmu,hmuME])) * 1.1
         leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
+        he.SetLineColor(ROOT.kRed+2)
+        he.SetMaximum(m)
+        he.Draw("E1 SAME")
+        leg.AddEntry(he,"#nu_{e} ME","LE")
         hmu.SetLineColor(ROOT.kGreen-2)
         #hmu.SetMaximum(m)
         hmu.SetMarkerStyle(1)
         hmu.Draw("E1 SAME")
-        leg.AddEntry(hmu,"#nu_{#mu} LE")
-        he.SetLineColor(ROOT.kRed+2)
-        #he.SetMaximum(m)
-        he.Draw("E1 SAME")
-        leg.AddEntry(he,"#nu_{e} ME")
+        leg.AddEntry(hmu,"#nu_{#mu} LE","LE")
         hmuME.SetLineColor(ROOT.kBlue-2)
         #hmu.SetMaximum(m)
         hmuME.SetMarkerStyle(1)
         hmuME.Draw("E1 SAME")
-        leg.AddEntry(hmuME,"#nu_{#mu} ME")
+        leg.AddEntry(hmuME,"#nu_{#mu} ME","LE")
+        colors = ROOT.MnvColors.GetColors()
+        for i,h in enumerate(mc):
+            h.SetLineColor(colors[i])
+            h.Draw("HIST C SAME")
+            leg.AddEntry(h,DrawMC[i],"L")
         leg.Draw()
     nuefile = ROOT.TFile.Open("/minerva/data/users/hsu/nu_e/xsec_meFHC_col13.3_MAD.root")
     numufile = ROOT.TFile.Open("/minerva/data/users/hsu/numu_xsec_LE.root")
     numuMEfile = ROOT.TFile.Open("/minerva/data/users/hsu/numu_xsec_ME.root")
+    numuMCfile = ROOT.TFile.Open("/minerva/data/users/hsu/numu_xsec_MCME.root")
     he = nuefile.Get("Eavail_q3_dataxsec").GetCVHistoWithError().Clone("nue")
     hmu = numufile.Get("Eavail_q3_LErebin").Clone("numu")
     hmuME = numuMEfile.Get("Eavail_q3_MErebin").Clone("numu")
     hmu.Scale(10) #convert to 10^-39
     hists = [he,hmu,hmuME]
-    PlotTools.MakeGridPlot(PlotTools.Make2DSlice,Draw,[he,hmu,hmuME],draw_seperate_legend=True)
+    for i in DrawMC:
+        hists.append(numuMCfile.Get(i).Clone(i))
+    PlotTools.MakeGridPlot(PlotTools.Make2DSlice,Draw,hists,draw_seperate_legend=True)
     PlotTools.Print("Eavail_q3_xseccomp")
 
 def GetLEXsec():
@@ -169,8 +190,29 @@ def GetMEXsec():
     fp.Close
     f.Close()
 
+def GetMEMCXsec():
+    f =  ROOT.TFile.Open("/minerva/data/users/hsu/MC_LowRecoilAnalysis.root")
+    fp = ROOT.TFile.Open("/minerva/data/users/hsu/numu_xsec_MCME.root","RECREATE")
+    pairs = {"MnvTune-v1.2":"MCmnvtuneV12",
+             "MnvTune-v3":"MCmnvtuneV3",
+            "NuWro-SF": "MCnuwroSF",
+            "NuWro-LFG": "MCnuwroLFG",
+            "GENIE3-10a":"MCgenie310a",
+            "GENIE3-10b":"MCgenie310b",
+            "GENIE3-02a":"MCgenie302a",
+            }
+    for k,v in pairs.items():
+        hmu = f.Get(v)
+        hrebined = RebinHistogram(hmu,None)
+        fp.cd()
+        hrebined.SetTitle(k)
+        hrebined.Write(k)
+    fp.Close()
+    f.Close()
+
 
 if __name__ == "__main__":
     #GetLEXsec()
-    GetMEXsec()
+    #GetMEXsec()
+    #GetMEMCXsec()
     compXsec()

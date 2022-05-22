@@ -26,6 +26,8 @@ MNVPLOTTER.height_nspaces_per_hist = 1.2
 MNVPLOTTER.width_xspace_per_letter = .4
 MNVPLOTTER.legend_text_size        = .03
 
+MNVPLOTTER.good_colors.pop_back()
+
 CANVAS = ROOT.TCanvas("c2","c2",1600,1000)
 
 def Logx(canvas):
@@ -222,6 +224,8 @@ def PrepareStack(data_hists,mc_hists,Grouping = None,errorband=None):
         hists =[tmp]
     if errorband is not None:
         mc_list = [PlotUtils.MnvH2D(h.GetVertErrorBand(errorband[0]).GetHist(errorband[1])) for h in mc_list]
+        for i in mc_list:
+            i.SetLineColor(ROOT.kBlack)
     hists.extend(mc_list)
     return plotfunction,hists
 
@@ -260,6 +264,7 @@ def updatePlotterErrorGroup(group,mnvplotter=MNVPLOTTER):
     mnvplotter.error_summary_group_map.clear();
     for k,v in group.items():
         vec = ROOT.vector("std::string")()
+        #print (k,v)
         for vs in v :
             vec.push_back(vs)
         mnvplotter.error_summary_group_map[k]= vec
@@ -287,6 +292,8 @@ def AdaptivePlotterErrorGroup(hist,result,mnvplotter=MNVPLOTTER):
 
 
 def CalMXN(N_plots,max_horizontal_plot = 4):
+    if N_plots==1:
+        return 1,1
     height = math.ceil(1.0*N_plots/max_horizontal_plot)  #hard code max 3 plots per line
     width = math.ceil(N_plots/height) #number of plots per line
     return int(width),int(height),0,0  # the last two are margins. Sorry has to hack
@@ -392,13 +399,15 @@ def MakeGridPlot(MakingSlice,MakingEachPlot,input_hists,CanvasConfig=lambda canv
         canvas.SetLeftMargin(0)
     slices = list(map(lambda *args: args, *list(map(MakingSlice,input_hists))))
     N_plots = len(slices)
+    #print(N_plots)
     canvas.Divide(*CalMXN(N_plots+int(draw_seperate_legend)))
     for i in range(N_plots):
         canvas.cd(i+1)
         tcanvas = canvas.GetPad(i+1)
         if not CanvasConfig(tcanvas):
             print("Warning: failed setting canvas.")
-        SetMargin(tcanvas)
+        if N_plots>1:
+            SetMargin(tcanvas)
         MakingEachPlot(mnvplotter,*slices[i])
         mnvplotter.AddHistoTitle(slices[i][0].GetTitle())
         #code.interact(local=locals())

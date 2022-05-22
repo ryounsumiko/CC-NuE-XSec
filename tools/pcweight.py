@@ -214,8 +214,8 @@ class RHCNewWeight(MyWeighterBase):
 class EnuElectronMuonWeight(DataWeight):
     def __init__(self):
         super(EnuElectronMuonWeight,self).__init__(lambda universe:universe.kin_cal.reco_E_nu_cal)
-        self.f = ROOT.TFile.Open("{}/studies/emu_scale2.root".format(os.environ["CCNUEROOT"]))
-        self.h = self.f.Get("Enu")
+        self.f = ROOT.TFile.Open("{}/studies/flux_scale.root".format(os.environ["CCNUEROOT"]))
+        self.h = self.f.Get("FHC")
         self.h.ClearAllErrorBands()
         self.weighter = partial(self.fileBasedWeight,hist=self.h)
 
@@ -223,8 +223,8 @@ class EnuElectronMuonWeight(DataWeight):
 class EnuElectronMuonWeightTrue(DataWeight):
     def __init__(self):
         super(EnuElectronMuonWeightTrue,self).__init__(lambda universe:universe.kin_cal.true_enu_genie)
-        self.f = ROOT.TFile.Open("{}/studies/emu_scale.root".format(os.environ["CCNUEROOT"]))
-        self.h = self.f.Get("tEnu")
+        self.f = ROOT.TFile.Open("{}/studies/flux_scale.root".format(os.environ["CCNUEROOT"]))
+        self.h = self.f.Get("FHC")
         self.h.ClearAllErrorBands()
         self.weighter = partial(self.fileBasedWeight,hist=self.h)
 

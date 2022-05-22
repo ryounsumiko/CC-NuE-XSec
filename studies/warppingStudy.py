@@ -151,7 +151,7 @@ def RunTransWrapper(tupleName,tag,njobs):
 
 AlternativeModels = {
   "CV":None,
-  #"LowQ2Pi_Joint": ("LowQ2Pi_Joint",0),
+  "MnvTune-v1": ("LowQ2Pi_None",0),
   #"LowQ2Pi_NUPi0": ("LowQ2Pi_NUPI0",0),
   "2p2h0": ("Low_Recoil_2p2h_Tune",0),
   "2p2h1": ("Low_Recoil_2p2h_Tune",1),

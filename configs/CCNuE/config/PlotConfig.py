@@ -301,6 +301,10 @@ HISTS_TO_MAKE = [
     #  "tags":{"truth_class","sideband"}},
     # {"variables":["Neutrino Energy QE"],
     #  "tags":{"truth_class","sideband"}},
+    "Front dEdX",
+     {"variables":["PsiEe"],
+     "tags": {"truth_class","sideband"},
+     },
 
     "Visible Energy vs q3",
     "Visible Energy vs q3 Migration",
