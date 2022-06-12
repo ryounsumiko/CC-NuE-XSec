@@ -219,7 +219,11 @@ PLOTS_TO_MAKE = [
     #  "plot_type":"err"},
     {"name":"Neutrino Energy Migration",
      "plot_type":"migration"},
-    {"variables":["True Neutrino Energy","Neutrino Energy"],
+    {"variables":["Neutrino Energy","True Neutrino Energy"],
+     "plot_type":"migration"},
+    {"variables":["NuMu Neutrino Energy","True Neutrino Energy"],
+      "plot_type":"migration"},
+    {"variables":["Biased Neutrino Energy","True Neutrino Energy"],
      "plot_type":"migration"}
 ]
 

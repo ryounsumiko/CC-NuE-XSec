@@ -11,7 +11,7 @@ from config.SignalDef import TRUTH_CATEGORIES,EXTRA_OTHER
 from config.CutConfig import SAMPLE_CUTS,KINEMATICS_CUTS
 from tools.CutLibrary import CUTS
 
-TRUE_SIGNAL_WEIGHTED=True
+TRUE_SIGNAL_WEIGHTED=False
 
 class HistWrapper1D(HistWrapper):
     def __init__(self,title,bins):

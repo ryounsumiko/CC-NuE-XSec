@@ -69,11 +69,11 @@ def Ratio(hists,denominator=None,option=""):
     if denominator is None:
         denominator = hists[0]
     for i in range(len(hists)):
-        hists[i].Divide(hists[i],denominator,1,1,option)
+        hists[i].DivideSingle(hists[i],denominator,1,1,option)
     return hists
         
 
-def PrepareSignalDecompose(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_data = False,only_cated = False):
+def PrepareSignalDecompose(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_data = False,ratio=False,only_cated = False):
     def ReSumHists(h_list):
         if len(h_list) == 0:
             return None
@@ -89,18 +89,18 @@ def PrepareSignalDecompose(data_hists,mc_hists,cates,sys_on_mc = True, sys_on_da
             totalHist = ReSumHists(cate_hists)
         else:
             totalHist = mc_hists.GetHist()
-        hists.append(totalHist.GetCVHistoWithError() if sys_on_mc else totalHist.GetCVHistoWithStatError())
+        hists.append(totalHist if sys_on_mc else totalHist.GetCVHistoWithStatError())
         hists.extend(cate_hists)
-        plotfunction = lambda mnvplotter,data_hist, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles)(data_hist,mc_hist,mc_ints)
+        plotfunction = lambda mnvplotter,data_hist, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles,ratio=ratio)(data_hist,mc_hist,mc_ints)
     elif mc_hists.valid:
         cate_hists,colors,titles  = mc_hists.GetCateList(cates)
         if only_cated :
             totalHist = ReSumHists(cate_hists)
         else:
             totalHist = mc_hists.GetHist()
-        hists = [totalHist.GetCVHistoWithError() if sys_on_mc else totalHist.GetCVHistoWithStatError()]
+        hists = [totalHist if sys_on_mc else totalHist.GetCVHistoWithStatError()]
         hists.extend(cate_hists)
-        plotfunction = lambda mnvplotter, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles)(None,mc_hist,mc_ints)
+        plotfunction = lambda mnvplotter, mc_hist, *mc_ints : partial(MakeSignalDecomposePlot,color=colors,title=titles,ratio=ratio)(None,mc_hist,mc_ints)
     else:
         raise KeyError("Non sense making signal decomposition plots without mc")
     return plotfunction,hists
@@ -358,7 +358,18 @@ def MakeModelVariantPlot(data_hist, mc_hists, color=None, title=None,legend ="TR
 #     else:
 #         mnvplotter.DrawStackedMC(TArray,pot_scale,legend,0,0,1001)
 
-def MakeSignalDecomposePlot(data_hist, mc_hist, mc_hists, title, color, pot_scale = 1.0, mnvplotter=MNVPLOTTER,canvas=CANVAS):
+def MakeSignalDecomposePlot(data_hist, mc_hist, mc_hists, title, color, ratio = False,pot_scale = 1.0, mnvplotter=MNVPLOTTER,canvas=CANVAS):
+    if ratio:
+        tmp = mc_hist.Clone("clx")
+        mc_hists = Ratio(mc_hists,tmp,"B")
+        mc_hist = Ratio([mc_hist],tmp,"B")[0]
+        #mc_hist.Sumw2()
+        # plotting script has a bug (feature?) that the error band will span 0-1 if error is exactly 0. Set it to small value.
+        for i in range(mc_hist.GetSize()):
+            mc_hist.SetBinError(i,1e-10)
+        if data_hist:
+            data_hist = Ratio([data_hist],tmp)[0]
+        #del tmp
     if data_hist is not None:
         try:
             mnvplotter.DrawDataMCWithErrorBand(data_hist,mc_hist,pot_scale,"TR",False,ROOT.nullptr,ROOT.nullptr,False,True)

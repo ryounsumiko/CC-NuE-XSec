@@ -196,6 +196,16 @@ CUT_CONFIGS = {
         "cut_fn": lambda vals: vals <= CutConfig.Reco_visEcut,
         "variable_range": [0.4* i for i in range(0,11)]
     },
+    "UIEWeightedPos" : {
+        "value_getter": lambda event,nprong: event.UpstreamInlineEnergyWgtdPosMean,
+        "cut_fn": lambda vals: vals > CutConfig.UIE_WeightedPos_Cut,
+        "variable_range": [0.1*i for i in range(0,51)]
+    },
+    "TotalUpstream" : {
+        "value_getter": lambda event,nprong: sum(event.ExtraEnergyClusters_energy[i] for i in filter(lambda i:event.ExtraEnergyClusters_Z[i]<event.vtx[2], list(range(event.ExtraEnergyClusters_energy_sz)))),
+        "cut_fn": lambda vals: vals < CutConfig.TotalUpstream_CUT,
+        "variable_range": [10*i for i in range(0,31)]
+    },
 
     # "InversePsi": {
     #     "value_getter": lambda event, nprong: (event.prong_TotalVisE[nprong]/1e3, event.Psi) ,

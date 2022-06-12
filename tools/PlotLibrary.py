@@ -459,6 +459,13 @@ VARIABLE_DICT = {
         "binning" : PlotConfig.NEUTRINO_ENERGY_BINNING,
         "value_getter" : lambda event: event.kin_cal.reco_E_lep+event.kin_cal.reco_visE,
     },
+    "NuMu Neutrino Energy":
+    {
+        "name" : "Enu_numu",
+        "title" : "E_{#nu} (GeV)",
+        "binning" : PlotConfig.NEUTRINO_ENERGY_BINNING,
+        "value_getter" : lambda event: event.kin_cal.reco_Enu_numuspline,
+    },
      "True Neutrino Energy":
     {
         "name" : "tEnu",
@@ -691,6 +698,17 @@ PLOT_SETTINGS= {
         "value_getter" : [lambda event: event.kin_cal.reco_E_nu_cal],
         "tags": reco_tags
     },
+
+    "NuMu Neutrino Energy":
+    {
+        "name" : "Enu",
+        "title" : "Neutrino Energy; E_{#nu} (GeV); dNEvents/dE_{#nu}",
+
+        "binning" : [PlotConfig.NEUTRINO_ENERGY_BINNING],
+        "value_getter" : [lambda event: event.kin_cal.reco_Enu_numuspline],
+        "tags": reco_tags
+    },
+
     "True Neutrino Energy":
     {
         "name" : "tEnu",

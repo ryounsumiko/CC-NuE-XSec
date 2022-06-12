@@ -56,7 +56,8 @@ class KinematicsCalculator(object):
             self.Cals.append(self.CalculateRecoKinematics)
         if self.calc_true:
             self.Cals.append(self.CalculatePCTrueKinematics if self.is_pc else self.CalculateTrueKinematics)
-        self.spliner = NuMuSpline()
+        self.spliner = NuESpline()
+        self.spliner_numu = NuMuSpline()
 
     @staticmethod
     def calcq3(Q2, Enu, Elep):
@@ -85,6 +86,7 @@ class KinematicsCalculator(object):
         self.reco_visE = None
         self.reco_q0 = None
         self.reco_q3 = None
+        self.reco_Pt_lep=None
         self.LLR = None
         self.Euv = None
         self.Exuv = None
@@ -149,6 +151,7 @@ class KinematicsCalculator(object):
         #now hadronic calorimetry
         self.reco_q0 = self.spliner.get_q0(self.event.RecoilEnergy()/1e3)
         self.reco_visE = self.event.AvailableEnergy()/1e3
+        self.reco_Enu_numuspline = self.reco_E_lep+self.spliner_numu.get_q0(self.event.RecoilEnergy()/1e3)
         # calc q2, q3
         self.reco_E_nu_cal = self.reco_E_lep + self.reco_q0
         self.reco_E_nu_QE = KinematicsCalculator.Enu_QE(self.reco_E_lep, self.reco_P_lep, self.reco_theta_lep_rad, self.M_lep_sqr)

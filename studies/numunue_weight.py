@@ -6,6 +6,7 @@ import UnfoldUtils
 from multiprocessing import Process
 from tools import PlotTools,Utilities
 from functools import partial
+from array import array
 # Required input files:
 # numufile: unweighted mc numu sample, DO NOT apply background constraint scale factors.
 # nuefile: unweighted mc nue sample, DO NOT apply background constraint scale factors.
@@ -16,10 +17,10 @@ from functools import partial
 
 
 ROOT.TH1.AddDirectory(False)
-numufile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_muon_MAD.root"
+numufile = "/minerva/data/users/hsu/nu_e/kin_dist_mcmeFHC_muon_MAD.root"
 nuefile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_electron_MAD.root"
 nuesignalrichfile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_BigNuE_electron_MAD.root"
-nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx2_electron_weighted_MAD.root"
+nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_electron_weighted_MAD.root"
 nuedatafile = "/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_electron_MAD.root"
 numuweightedfile =  {
     "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_muon_weighted_MAD.root",
@@ -37,7 +38,8 @@ MU_BACKGROUNDS = ["NC","CCNuE","CCAntiNuMu","NonFiducial","NonPhaseSpace","Other
 #PLOT OUTPUT PATH 
 PLOTPATH = "/minerva/data/users/{}/numunueRatioPlots/".format(os.environ["USER"])
 
-DRAW_SYSTEMATICS = False
+DRAW_SYSTEMATICS = True
+fluxbin = [0.5*i for i in range(4,21)]+[i for i in range(11,21)]
 
 # Matching signal channels. format:
 # ("category name used in numu sample", "category name used in nue sample","category name in plot name")
@@ -113,24 +115,26 @@ def MakeScaleFile(hist_names):
 
 def MakeScaleFile2():
     Fout = ROOT.TFile.Open("emu_scale2.root","RECREATE")
-    fe = ROOT.TFile.Open(nuefile)
-    ePOT = Utilities.getPOTFromFile(nuefile)
+    # fe = ROOT.TFile.Open(nuefile)
+    # ePOT = Utilities.getPOTFromFile(nuefile)
     fmu = ROOT.TFile.Open(numufile)
     muPOT = Utilities.getPOTFromFile(numufile)
-    fesignalrich = ROOT.TFile.Open(nuesignalrichfile)
-    esignalrichPOT = relativePOT(fe.Get("Eavail_q3_true_signal"),fesignalrich.Get("Eavail_q3_true_signal"),ePOT)
-    print(ePOT,muPOT,esignalrichPOT)
-    he = GetSignalHist(fesignalrich,E_SIGNALS,"tEnu")
+    # fesignalrich = ROOT.TFile.Open(nuesignalrichfile)
+    # esignalrichPOT = relativePOT(fe.Get("Eavail_q3_true_signal"),fesignalrich.Get("Eavail_q3_true_signal"),ePOT)
+    # print(ePOT,muPOT,esignalrichPOT)
+    # he = GetSignalHist(fesignalrich,E_SIGNALS,"tEnu")
     migration = fmu.Get("Enu_migration").Clone()
-    he.Scale(muPOT/esignalrichPOT)
-    tmp = FindScale2(he,migration)
+    # he.Scale(muPOT/esignalrichPOT)
+    fflux = ROOT.TFile.Open("flux_scale.root")
+    ratio = fflux.Get("FHC")
+    tmp = FindScale2(ratio,migration)
     scale_hist = fmu.Get("Enu").Clone()
     for i in range(scale_hist.GetNbinsX()+2):
         scale_hist.SetBinContent(i,tmp[i][0])
         scale_hist.SetBinError(i,0)
     Fout.cd()
     scale_hist.Write("Enu")
-    fe.Close()
+    fflux.Close()
     fmu.Close()
     Fout.Close()
 
@@ -139,9 +143,15 @@ def FindScale2(target,migration):
     m = ROOT.TMatrixD(migration.GetNbinsY()+2,migration.GetNbinsX()+2)
     t = ROOT.TMatrixD(target.GetNbinsX()+2,1)
 
-    for x in range(migration.GetNbinsX()+2):
-        for y in range(migration.GetNbinsY()+2):
+    for y in range(migration.GetNbinsY()+2):
+        total = 0
+        for x in range(migration.GetNbinsX()+2):
             m[y][x]=migration.GetBinContent(x,y)
+            total += m[y][x]
+        if not total:
+            continue
+        for x in range(migration.GetNbinsX()+2):
+            m[y][x]=m[y][x]/total
 
     for y in range(target.GetNbinsX()+2):
         t[y][0] = target.GetBinContent(y)
@@ -185,9 +195,9 @@ def GetEfficiencyCorrection():
         for k,v in names.items():
             div = hmus[2] if "_mu" in k else hes[2]
             v.Divide(v,div)
-            htemp = PlotUtils.MnvH2D(v.GetCVHistoWithError())
+            #htemp = PlotUtils.MnvH2D(v)
             Fout.cd()
-            htemp.Write("{}_{}".format(i[0],k))
+            v.Write("{}_{}".format(i[0],k))
 
 def GetEfficiency(hist_name,is_muon,is_reco_weight):
     Feff = ROOT.TFile.Open("eff_corr_scale.root")
@@ -195,6 +205,12 @@ def GetEfficiency(hist_name,is_muon,is_reco_weight):
     htemp = Feff.Get(name)
     Feff.Close()
     return htemp
+
+def myRebin(hist,binning):
+    h2 = ROOT.TH1D("{}_rebin".format(hist.GetName()),hist.GetTitle(),len(binning)-1,array('d',binning))
+    for i in range(0,hist.GetSize()):
+        h2.Fill(hist.GetXaxis().GetBinCenter(i),hist.GetBinContent(i))
+    return h2
 
 def MakeCompPlot():
     def getFileAndPOT(filename):
@@ -262,7 +278,7 @@ def MakeCompPlot():
 
 
     def DrawRatio(mnvplotter,h1,h2,include_systematics = DRAW_SYSTEMATICS):
-        cast = (lambda x:x.GetCVHistoWithError()) if include_systematics else (lambda x:x.GetCVHistoWithStatError()) 
+        cast = (lambda x:x) if include_systematics else (lambda x:x.GetCVHistoWithStatError()) 
         mnvplotter.DrawDataMCRatio(cast(h1),cast(h2), 1.0 ,True,0,2)
 
     def DrawDoubleRatio(mnvplotter,h1,h2,h3,h4,include_systematics = DRAW_SYSTEMATICS):
@@ -315,18 +331,19 @@ def MakeCompPlot():
         except :
             print ("hist: {} not found".format(hist_name))
             continue
-        hmu.Scale(numuDataPOT/numuMCPOT)
-        he.Scale(numuDataPOT/nueMCsignalPOT)
-        hmudata = None#numuDatafile.Get(hist_name)
+        hmu.Scale(numuDataPOT/numuMCPOT,"width")
+        he.Scale(numuDataPOT/nueMCsignalPOT,"width")
+        hmudata = numuDatafile.Get(hist_name)
         if hmudata:
+            hmudata.Scale(numuDataPOT/numuDataPOT,"width")
             hmubkg = GetSignalHist(numuMCfile,MU_BACKGROUNDS,hist_name)
-            hmubkg.Scale(numuDataPOT/numuMCPOT)
+            hmubkg.Scale(numuDataPOT/numuMCPOT,"width")
             SubtractPoissonHistograms(hmudata,hmubkg)
-        hedata = None# nueDatafile.Get(hist_name)
+        hedata = nueDatafile.Get(hist_name)
         if hedata:
-            hedata.Scale(numuDataPOT/nueDataPOT)
+            hedata.Scale(numuDataPOT/nueDataPOT,"width")
             hebkg = GetSignalHist(nueBkgfile,E_BACKGROUNDS,hist_name)
-            hebkg.Scale(numuDataPOT/nueBkgPOT)
+            hebkg.Scale(numuDataPOT/nueBkgPOT,"width")
             SubtractPoissonHistograms(hedata,hebkg)
 
         if "true_signal" in hist_name:
@@ -353,26 +370,45 @@ def MakeCompPlot():
         PlotTools.MakeGridPlot(Slicer,DrawRatio,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
         PlotTools.CANVAS.Print("{}{}_MCratio.png".format(PLOTPATH,hist_name))
 
-        if hist_name in ["Eavail_q3","Eavail_Lepton_Pt"]:
+        if hist_name in ["Eavail_q3","Eavail_Lepton_Pt","tEavail_tQ3","tEavail_tLepton_Pt"]:
+            thist_name = "Eavail_q3" if hist_name in ["Eavail_q3","tEavail_tQ3"] else "Eavail_Lepton_Pt"
+           # print(thist_name)
             for reco_weighted in [True,False]:
-                eff_mu = GetEfficiency(hist_name,True,reco_weighted)
-                eff_e = GetEfficiency(hist_name,False,reco_weighted)
+                eff_mu = GetEfficiency(thist_name,True,reco_weighted)
+                eff_e = GetEfficiency(thist_name,False,reco_weighted)
                 hetemp = he.Clone()
-                hetemp.Divide(he,eff_e)
+                eff_e.AddMissingErrorBandsAndFillWithCV(he)
+                hetemp.Divide(hetemp,eff_e)
+                if hedata:
+                    hedatatemp = hedata.Clone()
+                    hedatatemp.Divide(hedatatemp,eff_e)
                 hmutemp = hmu.Clone()
-                hmutemp.Divide(hmu,eff_mu)
+                eff_mu.AddMissingErrorBandsAndFillWithCV(hmu)
+                hmutemp.Divide(hmutemp,eff_mu)
+                if hmudata:
+                    hmudatatemp = hmudata.Clone()
+                    hmudatatemp.Divide(hmudatatemp,eff_mu)
 
-                PlotTools.MakeGridPlot(Slicer,Draw,[hetemp,hmutemp],draw_seperate_legend = he.GetDimension()==2)
+                if hist_name == "Eavail_Lepton_Pt" and reco_weighted:
+                    print(he.GetBinContent(5,8),hetemp.GetBinContent(5,8))
+
+                if hedata and hmudata:
+                    PlotTools.MakeGridPlot(Slicer,Draw,[hetemp,hmutemp,hedatatemp,hmudatatemp],draw_seperate_legend = he.GetDimension()==2)
+                else:
+                    PlotTools.MakeGridPlot(Slicer,Draw,[hetemp,hmutemp],draw_seperate_legend = he.GetDimension()==2)
                 PlotTools.CANVAS.Print("{}{}_{}effcor.png".format(PLOTPATH,hist_name,"reco" if reco_weighted else ""))
                 PlotTools.MakeGridPlot(Slicer,DrawRatio,[hetemp,hmutemp],draw_seperate_legend = he.GetDimension()==2)
                 PlotTools.CANVAS.Print("{}{}_MC{}effcorratio.png".format(PLOTPATH,hist_name,"reco" if reco_weighted else ""))
+                if hedata and hmudata:
+                    PlotTools.MakeGridPlot(Slicer,DrawRatio,[hedatatemp,hmudatatemp],draw_seperate_legend = he.GetDimension()==2)
+                    PlotTools.CANVAS.Print("{}{}_Data{}effcorratio.png".format(PLOTPATH,hist_name,"reco" if reco_weighted else ""))
 
         
         for numu_sig,nue_sig,_ in SIGNAL_CHANNEL_PAIR:
             he = GetSignalHist(nueMCsignalfile,[nue_sig],hist_name)
             hmu = GetSignalHist(numuMCfile,[numu_sig],hist_name)
-            hmu.Scale(numuDataPOT/numuMCPOT)
-            he.Scale(numuDataPOT/nueMCsignalPOT)
+            hmu.Scale(numuDataPOT/numuMCPOT,"width")
+            he.Scale(numuDataPOT/nueMCsignalPOT,"width")
             if "true_signal" in hist_name:
                 hmu.Scale(sc)
             PlotTools.MakeGridPlot(Slicer,Draw,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
@@ -423,9 +459,9 @@ def MakeFluxWeight():
     Fout = ROOT.TFile.Open("flux_scale.root","RECREATE")
     for p in [FHC,RHC]:
         fe = ROOT.TFile.Open(filepath.format(p[0],12,p[1]))
-        he = fe.Get("flux_E_cvweighted")
+        he = myRebin(fe.Get("flux_E_cvweighted"),fluxbin)
         fmu = ROOT.TFile.Open(filepath.format(p[0],14,p[1]))
-        hmu = fmu.Get("flux_E_cvweighted")
+        hmu = myRebin(fmu.Get("flux_E_cvweighted"),fluxbin)
         he.Divide(he,hmu)
         Fout.cd()
         he.Write("FHC" if not p[0] else "RHC")
@@ -435,7 +471,7 @@ def MakeFluxWeight():
 if __name__ == "__main__":
     #MakeCompPlot()
     #MakeScaleFile(["Enu","tEnu","tEnu_true_signal"])
-    #MakeScaleFile2()
     #GetEfficiencyCorrection()
     MakeFluxWeight()
+    MakeScaleFile2()
 

@@ -179,9 +179,8 @@ DefaultPlotters={
     "errband":{"func":PlotTools.PrepareErrorBand},
     "model":{},
     "model_ratio" :{},
-    "sigdep_ratio":{"func":PlotTools.PrepareSignalDecompose,
-              "args": (SignalDecomposition,True,True,True)},
-    }
+    "sigdep":{},
+}
 
 PLOTS_TO_MAKE = [
     # {"variables":["Visible Energy","Lepton Pt"],
@@ -333,8 +332,8 @@ PLOTS_TO_MAKE = [
     #  "scale" : lambda histHolder:histHolder.POTScale(False)},
     {"variables":["Visible Energy","Lepton Pt"]},
     {"variables":["Visible Energy","Lepton Pt"],
-     "plot_type":"sigdep_ratio"},
-    {"variables":["Visible Energy","Lepton Pt"],
+     "plot_type":"comp"},
+     {"variables":["Visible Energy","Lepton Pt"],
      "plot_type":"err"},
     # {"variables":["Visible Energy","Lepton Pt"],
     #  "slicer": PlotTools.IdentitySlicer,
