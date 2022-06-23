@@ -48,11 +48,11 @@ def IsInKinematicPhaseSpace(event):
 
 # In case a event satisfy multiple definations, the first takes priority.
 TRUTH_CATEGORIES = OrderedDict()
-TRUTH_CATEGORIES["ExcessModel"] = lambda event: IsPC(event) or IsUnknown(event)
+TRUTH_CATEGORIES["ExcessModel"] = lambda event: IsPC(event) or IsUnknown(event) and IsFiducial(event)
 TRUTH_CATEGORIES["NuEElastic"] = lambda event: IsElastic(event)
-TRUTH_CATEGORIES["NonFiducial"] = lambda event: IsCC(event) and IsNuE(event) and not IsFiducial(event)
-TRUTH_CATEGORIES["NonPhaseSpace"] = lambda event: IsCC(event) and IsNuE(event) and not IsInKinematicPhaseSpace(event)
-TRUTH_CATEGORIES["CCNuEAntiNu"] = lambda event: IsCC(event) and IsNuE(event) and IsAntiNu(event)
+TRUTH_CATEGORIES["NonFiducial"] = lambda event:  IsPC(event) or IsUnknown(event) and not IsFiducial
+#TRUTH_CATEGORIES["NonPhaseSpace"] = lambda event: IsCC(event) and IsNuE(event) and not IsInKinematicPhaseSpace(event)
+#TRUTH_CATEGORIES["CCNuEAntiNu"] = lambda event: IsCC(event) and IsNuE(event) and IsAntiNu(event)
 
 TRUTH_CATEGORIES["CCNuEQE"] = lambda event: IsCC(event) and IsNuE(event) and IsQE(event)
 TRUTH_CATEGORIES["CCNuEDelta"] = lambda event: IsCC(event) and IsNuE(event) and IsDelta(event)
@@ -69,11 +69,7 @@ TRUTH_CATEGORIES["NCOther"] = lambda event: IsNC(event)
 
 # My signal is one or more of the listed categories.
 SIGNAL_DEFINATION = [
-    "CCNuEQE",
-    "CCNuEDelta",
-    "CCNuEDIS",
-    "CCNuE",
-    "CCNuE2p2h",
+    "ExcessModel",
 ]
 
 EXTRA_OTHER = [

@@ -54,7 +54,7 @@ FIDUCIAL_APOTHEM = 850
 FIDUCIAL_Z_RANGE = [5980,8422]
 
 # Kinematics cutoffs
-ELECTRON_ENERGY_RANGE = [2.5, float('inf')] # in GeV
+ELECTRON_ENERGY_RANGE = [1.5, float('inf')] # in GeV
 NEUTRINO_ENERGY_RANGE = [0, 100] # in GeV.
 ELECTRON_ANGLE_RANGE = [0, 30] # in deg
 RECO_Q3_RANGE = [0,4]
@@ -65,7 +65,10 @@ RECO_VISE_RANGE= [0,1.2]
 WEXP_CUT = 2
 Reco_visEcut = 2
 FRONT_DEDX_PI0_UPPERBOUND = 5
-PsiEe_CUT = 0.5
+PsiEe_CUT = 0.45
+
+TotalUpstream_CUT=120
+WeightedPos_CUT = 0.2
 
 
 ############################################################################
@@ -84,7 +87,6 @@ SAMPLE_CUTS = {
         "VertexTrackMultiplicity",
         "Afterpulsing",
         "DeadTime",
-        #"HasNoNonEMExitingTracks",
         #EM shower quality
         "StartPointVertexMultiplicity",
         "MeanFrontdEdX",
@@ -93,14 +95,34 @@ SAMPLE_CUTS = {
         #phase space
         "Vertex_Z",
         "Vertex_Apothem",
-        "Eavail",
-        # "HasNoVertexMismatch",
-        #"RecoQ3",
-        #"Exuv",
-        #"Euv",
-
-        #"LLR",
-        #"Psi",
+        "High UIE",
+        "UIEWeightedPos",
+        "LowPsiEe",
+        "TotalUpstream"
+    ],
+    "Coherent" : [
+        "NoCut",
+        "HasTracks",
+        "HasNoBackExitingTracks",
+        "EMLikeTrackScore",
+        #quality cuts
+        "DSCalVisE",
+        "ODCalVisE",
+        "VertexTrackMultiplicity",
+        "Afterpulsing",
+        "DeadTime",
+        #EM shower quality
+        "StartPointVertexMultiplicity",
+        "MeanFrontdEdX",
+        "NonMIPClusFrac",
+        "TransverseGapScore",
+        #phase space
+        "Vertex_Z",
+        "Vertex_Apothem",
+        "Low UIE",
+        #"UIEWeightedPos",
+        "LowPsiEe",
+        "TotalUpstream"
     ],
     # "High_Psi" : [
     #     "NoCut",
@@ -121,85 +143,54 @@ SAMPLE_CUTS = {
     #     "DeadTime",
     #     "Afterpulsing",
     # ],
-    "Excess_Low_Inline" : [
-        #"HasNoNonEMExitingTracks",
+    "Electron_Neutrino" : [
         "NoCut",
         "HasTracks",
         "HasNoBackExitingTracks",
-        "Vertex_Z",
-        "Vertex_Apothem",
         "EMLikeTrackScore",
+        #quality cuts
         "DSCalVisE",
         "ODCalVisE",
-        #"HasNoVertexMismatch",
         "VertexTrackMultiplicity",
+        "Afterpulsing",
+        "DeadTime",
+        #EM shower quality
         "StartPointVertexMultiplicity",
-        #"Psi",         #differnt from signal
+        "MeanFrontdEdX",
         "NonMIPClusFrac",
         "TransverseGapScore",
-        "DeadTime",
-        "Afterpulsing",
-        "Eavail",
-        "InverseMeanFrontdEdX",
-        "Low UIE",
-        "LowPsiEe"
-        #"Exuv",
-        #"Euv"
-    ],
-     "Excess_High_Inline" : [
-        #"HasNoNonEMExitingTracks",
-        "NoCut",
-        "HasTracks",
-        "HasNoBackExitingTracks",
+        #phase space
         "Vertex_Z",
         "Vertex_Apothem",
-        "EMLikeTrackScore",
-        "DSCalVisE",
-        "ODCalVisE",
-        #"HasNoVertexMismatch",
-        "VertexTrackMultiplicity",
-         "StartPointVertexMultiplicity",
-        #"Psi",         #differnt from signal
-        "NonMIPClusFrac",
-        "TransverseGapScore",
-        "DeadTime",
-        "Afterpulsing",
-        "Eavail",
-        "InverseMeanFrontdEdX",
         "High UIE",
-        "LowPsiEe"
-        #"Exuv",
-        #"Euv"
+        "InverseUIEWeightedPos",
+        "LowPsiEe",
+        "TotalUpstream"
     ],
     "Pi0" : [
-        #"HasNoNonEMExitingTracks",
         "NoCut",
-        "Vertex_Z",
-        "Vertex_Apothem",
         "HasTracks",
         "HasNoBackExitingTracks",
         "EMLikeTrackScore",
+        #quality cuts
         "DSCalVisE",
         "ODCalVisE",
-        #"HasNoVertexMismatch",
         "VertexTrackMultiplicity",
+        "Afterpulsing",
+        "DeadTime",
+        #EM shower quality
         "StartPointVertexMultiplicity",
+        "MeanFrontdEdX",
         "NonMIPClusFrac",
         "TransverseGapScore",
-        "DeadTime",
-        "Afterpulsing",
-        "Eavail",
-        "InverseMeanFrontdEdX",
-        "InverseLowPsiEe"
-        #"Exuv",
-        #"Euv"
-    ],
-    "Muon" : [
-        "HasMINOSMatch",
+        #phase space
         "Vertex_Z",
         "Vertex_Apothem",
-        "Neutrino Helicity",
-     ]
+        "High UIE",
+        "UIEWeightedPos",
+        "InverseLowPsiEe",
+        "TotalUpstream"
+    ],
 }
 
 KINEMATICS_CUTS = [

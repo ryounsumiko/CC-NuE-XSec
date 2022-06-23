@@ -180,7 +180,7 @@ CUT_CONFIGS = {
         "variable_range": [0.1* i for i in range(0,11)]
     },
 
-     "LowPsiEe": {
+    "LowPsiEe": {
         "value_getter": lambda event, nprong: event.kin_cal.reco_E_lep*event.Psi,
         "cut_fn": lambda vals: vals < CutConfig.PsiEe_CUT,
         "variable_range": [0.2* i for i in range(0,21)]
@@ -202,7 +202,7 @@ CUT_CONFIGS = {
         "variable_range": [0.1*i for i in range(0,51)]
     },
     "TotalUpstream" : {
-        "value_getter": lambda event,nprong: sum(event.ExtraEnergyClusters_energy[i] for i in filter(lambda i:event.ExtraEnergyClusters_Z[i]<event.vtx[2], list(range(event.ExtraEnergyClusters_energy_sz)))),
+        "value_getter": lambda event,nprong: 0,#sum(event.ExtraEnergyClusters_energy[i] for i in filter(lambda i:event.ExtraEnergyClusters_Z[i]<event.vtx[2], list(range(event.ExtraEnergyClusters_energy_sz)))),
         "cut_fn": lambda vals: vals < CutConfig.TotalUpstream_CUT,
         "variable_range": [10*i for i in range(0,31)]
     },

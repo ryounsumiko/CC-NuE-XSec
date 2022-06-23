@@ -16,7 +16,7 @@ import math
 NUM_UNIVERSE = 100
 #number of flux uniberses
 USE_NUE_CONSTRAINT = True
-AnaNuPDG=12
+AnaNuPDG=14
 NUM_FLUX_UNIVERSE = 200 if USE_NUE_CONSTRAINT else 100
 # detector mass uncertainty
 MASS_UNCERTAINTY = 0.014  # = 1.4% (it's fractional).  Laura (Doc7615) says she got this from Ron (Doc6016).

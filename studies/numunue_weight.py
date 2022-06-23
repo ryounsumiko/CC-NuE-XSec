@@ -23,8 +23,8 @@ nuesignalrichfile = "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_BigNuE_electro
 nuebkgtunedfile =  "/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_electron_weighted_MAD.root"
 nuedatafile = "/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_electron_MAD.root"
 numuweightedfile =  {
-    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcme1D_nx_muon_weighted_MAD.root",
-    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datame1D_nx_muon_weighted_MAD.root"
+    "mc":"/minerva/data/users/hsu/nu_e/kin_dist_mcmeFHC_exp_muon_weighted_MAD.root",
+    "data":"/minerva/data/users/hsu/nu_e/kin_dist_datameFHC_exp_muon_weighted_MAD.root"
 }
 
 # Defines the signal and background categories used in numu and nue sample. 
@@ -459,19 +459,47 @@ def MakeFluxWeight():
     Fout = ROOT.TFile.Open("flux_scale.root","RECREATE")
     for p in [FHC,RHC]:
         fe = ROOT.TFile.Open(filepath.format(p[0],12,p[1]))
-        he = myRebin(fe.Get("flux_E_cvweighted"),fluxbin)
+        he = fe.Get("flux_E_cvweighted")
         fmu = ROOT.TFile.Open(filepath.format(p[0],14,p[1]))
-        hmu = myRebin(fmu.Get("flux_E_cvweighted"),fluxbin)
+        hmu = fmu.Get("flux_E_cvweighted")
         he.Divide(he,hmu)
         Fout.cd()
         he.Write("FHC" if not p[0] else "RHC")
     Fout.Close()
 
 
+def Convolution(hin):
+    # <w(E)> = int w(E_reco) * N(E-E_reco,sigma) dE_reco
+    # =sum w(E_reco) * N (E-E_reco,sigma) DelE_reco
+    sigma = 0.7 #GeV
+    h2 = hin.Clone()
+    for i in range(1,hin.GetSize()-1):
+        E_t = hin.GetBinCenter(i)
+        result = 0
+        for j in range(1,hin.GetSize()-1):
+            E_r = hin.GetBinCenter(j)
+            binwidth = hin.GetBinWidth(j)
+            result += hin.GetBinContent(j) * ROOT.TMath.Gaus(E_r-E_t,0,sigma,True) * binwidth
+        h2.SetBinContent(i,result)
+    return h2
+
+def MakeScaleFile3():
+    Fout = ROOT.TFile.Open("emu_scale3.root","RECREATE")
+    fflux = ROOT.TFile.Open("flux_scale.root")
+    ratio = fflux.Get("FHC")
+    exp = Convolution(ratio)
+    Fout.cd()
+    exp.Write("Exp_Enu_weight")
+    for i in range(1,exp.GetSize()-1):
+        exp.SetBinContent(i,ratio.GetBinContent(i)**2/exp.GetBinContent(i))
+    exp.Write("Enu")
+    fflux.Close()
+    Fout.Close()
+
 if __name__ == "__main__":
-    #MakeCompPlot()
+    MakeCompPlot()
     #MakeScaleFile(["Enu","tEnu","tEnu_true_signal"])
     #GetEfficiencyCorrection()
-    MakeFluxWeight()
-    MakeScaleFile2()
+    #MakeFluxWeight()
+    #MakeScaleFile3()
 
