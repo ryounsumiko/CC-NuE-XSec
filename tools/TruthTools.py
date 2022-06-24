@@ -3,12 +3,45 @@ import math
 from operator import itemgetter
 import random
 
-def GetIndexlistFromPDG(event,PDG,include_anti_particle):
-    cond = (lambda x,y : abs(x)==abs(y)) if include_anti_particle else (lambda x,y :x==y)
-    return [i for i,x in enumerate(event.mc_FSPartPDG) if cond(x,PDG)]
 
-def MostEnergeticParticle(event,PDG,anti_particle=True):
-    particle_index = GetIndexlistFromPDG(event,PDG,anti_particle)
+def ArachneLink(event):
+    #head = "https://minerva05.fnal.gov/rodriges/Arachne/arachne.html"
+    head = "http://minerva05.fnal.gov/Arachne/arachne.html?det="
+    is_data = False
+    if hasattr(event, "mc"):
+        is_data = not event.mc
+        run = event.ev_run if is_data else event.mc_run
+    else:
+        try:
+            run = event.mc_run
+        except AttributeError as RuntimeError:
+            #no mc_run value, is data
+            run = event.ev_run
+            is_data = True
+
+    if is_data:
+        subrun = event.ev_subrun
+        gate = event.ev_gate
+        slice = event.slice_numbers if isinstance(event.slice_numbers,float) else event.slice_numbers[0]
+        head += "?det=MV&recoVer=v21r1p1"
+    else:
+        subrun = event.mc_subrun
+        gate = event.mc_nthEvtInFile+1
+        slice = 0
+        head +=  "SIM_minerva&recoVer=v21r1p1"
+
+    print((head+"&run=%d&subrun=%d&gate=%d&slice=%d" % (run,subrun,gate,slice)))
+
+def GetIndexlistFromPDG(event,PDG,include_anti_particle):
+    con = (lambda x,y : abs(x)==abs(y)) if include_anti_particle else (lambda x,y :x==y)
+    particle_index = [i for i,x in enumerate(event.mc_FSPartPDG) if cond(x,PDG)]
+
+def MostEnergeticParticle(event,PDG,anti_particle=True): 
+    if anti_particle:
+        particle_index = [i for i,x in enumerate(event.mc_FSPartPDG) if abs(x) == abs(PDG)]
+    else:
+        particle_index = [i for i,x in enumerate(event.mc_FSPartPDG) if x == PDG]
+
     if len(particle_index) == 0 :
         return None
     elif len(particle_index) > 1:
@@ -16,21 +49,6 @@ def MostEnergeticParticle(event,PDG,anti_particle=True):
         return event.mc_FSPartE.index(m)
     else : 
         return particle_index[0]
-
-def LeadingParticleEnergy(event,PDG,anti_particle=True):
-    particle_index = GetIndexlistFromPDG(event,PDG,anti_particle)
-    if len(particle_index) == 0 :
-        return None
-    else:
-        return max(event.mc_FSPartE[i] for i in particle_index)
-
-def CalcApothem(x,y):
-    x=abs(x)
-    y=abs(y)
-    if ( x == 0 or y/x > 1/math.sqrt(3)):
-        return (y+x/math.sqrt(3))/2*math.sqrt(3)
-    else:
-        return x
 
 def EnergyofParticle(event,PDG,anti_particle=True):
     if anti_particle:
@@ -252,6 +270,30 @@ def dE(event):
     return energyfraction
     #print sumde/10, event.prong_dEdXMeanFrontTracker[0]
 
+
+def InlineWeighted(event, inttype):
+    yes = True
+    if inttype == 'diff':
+        if event.mc_intType != 10:
+            yes = False
+    elif inttype == 'nc':
+        if event.mc_intType != 4 or event.mc_current != 2 or 111 not in event.mc_FSPartPDG:
+            yes = False
+    if yes:
+        return event.UpstreamInlineEnergyWgtdPosMean 
+
+def PrintArachne(event):
+    #print("Type: ", event.mc_intType)
+    #print("Upstream: ", event.UpstreamInlineEnergy)
+    if event.UpstreamInlineEnergy < 10 and tDef1(event) > 0.3 and event.mc_intType == 10:
+        ArachneLink(event)
+        print("incoming energy: ", event.mc_incomingE)
+        print("Upstream E", event.UpstreamInlineEnergy)
+        print("t: ", tDef1(event))
+        print(" ")
+    return None
+
+
 def vtxdiff(event):
     reco_vtx = event.vtx
     truth_vtx = event.mc_vtx
@@ -261,10 +303,50 @@ def vtxdiff(event):
     diff_z = reco_vtx[2] - truth_vtx[2] 
     return diff_z
 
+def vtxdiff_one(event, inttype):
+    yes = True
+
+    if inttype == 'diff':
+        if event.mc_intType != 10:
+            yes = False
+
+    elif inttype == 'coh':
+        if event.mc_intType != 4:
+            yes = False
+
+    elif inttype == 'nc':
+        if event.mc_intType == 4 or  event.mc_current != 2 or 111 not in event.mc_FSPartPDG:
+            yes = False
+
+    ''' elif inttype == 'Sarah':
+        IsCC = event.mc_current == 1
+        IsNuE = abs(event.mc_incoming) == 12
+        IsMeson = 211 in event.mc_FSPartPDG or -211 in event.mc_FSPartPDG or 321 in event.mc_FSPartPDG or -321 in event.mc_FSPartPDG or 323 in event.mc_FSPartPDG or -323 in event.mc_FSPartPDG  or 111 in event.mc_FSPartPDG or 130 in event.mc_FSPartPDG or 310 in event.mc_FSPartPDG or 311 in event.mc_FSPartPDG
+        IsPi0InFinalState = 111 in event.mc_FSPartPDG
+        IsHeavyBaryon = 3112 in event.mc_FSPartPDG or 3122 in event.mc_FSPartPDG or 3212 in event.mc_FSPartPDG or 3222 in event.mc_FSPartPDG or 4112 in event.mc_FSPartPDG or 4122 in event.mc_FSPartPDG or 4212 in event.mc_FSPartPDG or 4222 in event.mc_FSPartPDG
+        IsPhoton = 22 in event.mc_FSPartPDG and event.mc_FSPartPDG[0] != 22    
+ 
+        if IsCC and IsNuE and not IsPi0InFinalState and not IsMeson and not IsHeavyBaryon and not IsPhoton:
+            yes = True
+        elif IsNuE and IsPi0InFinalState or IsMeson or IsPhoton or IsHeavyBaryon:
+            yes = True
+        else:
+            yes = False
+    '''
+    if yes:
+        reco_vtx = event.vtx
+        truth_vtx = event.mc_vtx
+
+        diff_x = reco_vtx[0] - truth_vtx[0]
+        diff_y = reco_vtx[1] - truth_vtx[1]
+        diff_z = reco_vtx[2] - truth_vtx[2]
+        return diff_z
+
+
 def Leakage(event):
     OutsideConeE = event.kin_cal.reco_OutsideCone_E
-    trueE = event.kin_cal.true_E_e 
-    recoE = event.kin_cal.reco_E_e
+    trueE = event.kin_cal.true_E_lep 
+    recoE = event.kin_cal.reco_E_lep
     trueTh = event.kin_cal.true_theta_e
  
     fraction = OutsideConeE / trueE 
@@ -291,32 +373,32 @@ def VertexR(event):
     return R2/1e3
 
 def Eth2(event):
-    Ee = event.kin_cal.reco_E_e
+    Ee = event.kin_cal.reco_E_lep
     theta = math.radians(event.kin_cal.reco_theta_e)
     Eth2 = Ee * (theta * theta) 
     return Eth2
 
 def Eth(event):
-    Ee = event.kin_cal.reco_E_e
+    Ee = event.kin_cal.reco_E_lep
     theta = math.radians(event.kin_cal.reco_theta_e)
     Eth = Ee * (theta)   
     return Eth
 
 def tEth(event):
-    Ee = event.kin_cal.true_E_e
+    Ee = event.kin_cal.true_E_lep
     theta = event.kin_cal.true_theta_e_rad
     tEth = Ee * theta
     return tEth
 
 def binEe(event):
-    Ee = event.kin_cal.reco_E_e 
+    Ee = event.kin_cal.reco_E_lep 
     if len(event.prong_MedianPlaneShowerWidth) != 0:
         width = event.prong_MedianPlaneShowerWidth[0] 
         if 4.0 <= Ee < 10.0:   
             return width 
  
 def TransverseShower(event):
-    Ee = event.kin_cal.reco_E_e
+    Ee = event.kin_cal.reco_E_lep
     asymm = {"Numerator": {}, "Denominator": {}}
     for view in ("X","U","V"):
         for frac_part in asymm:
@@ -340,7 +422,7 @@ def ExcessSort(event):
 
     if 0.6 < recoq3 < 1.0 and recoq0 < 0.25 and event.prong_dEdXMeanFrontTracker[0] > 2.4:
         print(event.mc_run,  event.mc_subrun, event.mc_nthEvtInFile+1, event.mc_intType, event.mc_incomingE, event.mc_incoming,event.prong_dEdXMeanFrontTracker[0]) 
-        #return event.kin_cal.reco_E_e
+        #return event.kin_cal.reco_E_lep
     return event.mc_incoming
 
 def Trans(event):
@@ -495,14 +577,21 @@ def test(event):
         return 1.0
 
 def Rebin(event): 
+    #print(event.UpstreamInlineEnergy)
     if event.UpstreamInlineEnergy < 0.4:
         return 0.4
     else: 
         return event.UpstreamInlineEnergy
 
+def RebinWeightPos(event):
+    if event.UpstreamInlineEnergyWgtdPosMean < 0.6:
+        return 0.6
+    else:
+        return event.UpstreamInlineEnergyWgtdPosMean
+
 def Print(event):
     if event.prong_dEdXMeanFrontTracker[0] > 2.4 and event.Psi < 0.1 and event.UpstreamInlineEnergy < 10:
-        print(event.UpstreamInlineEnergy, 'inline', event.kin_cal.reco_E_e) 
+        print(event.UpstreamInlineEnergy, 'inline', event.kin_cal.reco_E_lep) 
         Long(event)
         VertexDifferenceX(event)
         VertexDifferenceY(event)
@@ -528,5 +617,127 @@ def OverlappingEnergy(event):
             print(pdg, energy, coneE, coneE-energy)
         print(" ")
 
+
+def PiZeroE(event):
+    types = event.mc_FSPartPDG
+    energies = event.mc_FSPartE
+        
+    for i, val in enumerate(types):
+        if val == 111:
+            energy = energies[i]
+            return energy/1e3
+
+def PiZeroE_diff(event):
+    if event.mc_intType ==10:
+        types = event.mc_FSPartPDG
+        energies = event.mc_FSPartE
+
+        for i, val in enumerate(types):
+            if val == 111:
+                energy = energies[i]
+                return energy/1e3
+
+def tDef1(event):
+        pv_i = event.mc_incomingPartVec
+        pu_i = event.mc_primFSLepton
+        pix = 0
+        piy = 0
+        piz = 0
+        pie = 0
+        for i, val in enumerate(event.mc_FSPartPDG):
+            if val == 111:
+                pix = event.mc_FSPartPx[i]/1e3
+                piy = event.mc_FSPartPy[i]/1e3
+                piz = event.mc_FSPartPz[i]/1e3
+                pie = event.mc_FSPartE[i]/1e3
+        E2 =  (pv_i[3]/1e3 - pu_i[3]/1e3 - pie)**2
+        px2 =  (pv_i[0]/1e3 - pu_i[0]/1e3 - pix)**2
+        py2 = (pv_i[1]/1e3 - pu_i[1]/1e3 - piy)**2
+        pz2 =  (pv_i[2]/1e3 - pu_i[2]/1e3 - piz)**2 
+        tdiff_mag = abs(E2 - px2 - py2 - pz2)
+        #print(E2, px2, py2, pz2)
+        #print("tdiff1", tdiff_mag)
+        return tdiff_mag
+
+def tDef1_diff(event):
+    if event.mc_intType == 10:
+        pv_i = event.mc_incomingPartVec
+        pu_i = event.mc_primFSLepton
+        pix = 0
+        piy = 0
+        piz = 0
+        pie = 0
+        for i, val in enumerate(event.mc_FSPartPDG):
+            if val == 111:
+                pix = event.mc_FSPartPx[i]/1e3
+                piy = event.mc_FSPartPy[i]/1e3
+                piz = event.mc_FSPartPz[i]/1e3
+                pie = event.mc_FSPartE[i]/1e3
+        E2 =  (pv_i[3]/1e3 - pu_i[3]/1e3 - pie)**2
+        px2 =  (pv_i[0]/1e3 - pu_i[0]/1e3 - pix)**2
+        py2 = (pv_i[1]/1e3 - pu_i[1]/1e3 - piy)**2
+        pz2 =  (pv_i[2]/1e3 - pu_i[2]/1e3 - piz)**2
+        tdiff_mag = abs(E2 - px2 - py2 - pz2)
+        #print(E2, px2, py2, pz2)
+        #print("tdiff1", tdiff_mag)
+        return tdiff_mag
+
+def tDef2(event):
+        mass = 0.938
+        for i, val in enumerate(event.mc_FSPartPDG):
+            if val == 2212:
+                energy = event.mc_FSPartE[i]/1e3
+                tdiff = 2 * mass * abs(mass - energy)
+                #print("tdiff", tdiff)
+                return tdiff
+
+def tDiff(event):
+    if event.mc_intType == 10:
+        mass = 0.938
+        for i, val in enumerate(event.mc_FSPartPDG):
+            if val == 2212:
+                energy = event.mc_FSPartE[i]/1e3
+                tdiff = 2 * mass * abs(mass - energy)
+                #print("tdiff", tdiff)
+                return tdiff
+
+
+def pTrans(event, part):
+    for i, val in enumerate(event.mc_FSPartPDG):
+        if val == part:
+            px = event.mc_FSPartPx[i]/1e3
+            py = event.mc_FSPartPy[i]/1e3
+            pT = px**2 + py**2
+            #print(pT, "pT")
+            return pT
+
+
+def UpstreamEnergy(event):
+    vertex = event.vtx[2]/1e3
+    upstream_energy = 0
+    for i, pos in enumerate(event.ExtraEnergyClusters_Z):
+        if pos/1e3 < vertex:
+            upstream_energy += event.ExtraEnergyClusters_energy[i]
+    return upstream_energy
+
+def diffUpstream(event):
+    if event.mc_intType == 10:
+        vertex = event.vtx[2]/1e3
+        upstream_energy = 0
+        for i, pos in enumerate(event.ExtraEnergyClusters_Z):
+            if pos/1e3 < vertex:
+                upstream_energy += event.ExtraEnergyClusters_energy[i]
+        return upstream_energy
+
+def psi_ee(event):
+    psi_ee = event.Psi * event.kin_cal.reco_E_lep
+    return psi_ee
+
+
+def EePlusEOut(event):
+    return event.kin_cal.reco_E_lep + event.ConeOutsideE()/1e3
+
+def EePlusEOut2(event):
+    return event.kin_cal.reco_E_lep + event.ConeOutsideE() 
 
 

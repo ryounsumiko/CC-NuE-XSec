@@ -934,7 +934,7 @@ PLOT_SETTINGS= {
         "name" : "OutsideConeE",
         "title": "OutsideConeE ; Psi*Ee (GeV); NEvents/GeV",
         "binning" : [PlotConfig.OUTSIDE_ENERGY_BINNING],
-        "value_getter" : [lambda event: event.kin_cal.reco_OutsideCone_E],
+        "value_getter" : [lambda event: event.ConeOutsideE()],
         "tags": reco_tags
     },
 
@@ -964,6 +964,15 @@ PLOT_SETTINGS= {
         "binning" : [PlotConfig.VERTEX_DIFF_BINNING],
         "value_getter" : [lambda event: TruthTools.vtxdiff(event)],
         "tags": reco_tags,
+    },
+    "Median Shower Width vs Ee":
+    {
+        "name" : "med_shower_vs_Ee",
+        "title" : "Median Shower Width vs Electron Energy; Shower width; Electron Energy (GeV); NEvents",
+        "binning" : [PlotConfig.SHOWER_WIDTH_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING],
+        "value_getter" : [lambda event: event.prong_MedianPlaneShowerWidth[0],
+                          lambda event: event.kin_cal.reco_E_lep],
+        "tags" : reco_tags
     },
     "Median Plane Shower Width" :
     {
@@ -1001,6 +1010,16 @@ PLOT_SETTINGS= {
         "value_getter" :[ lambda event: TruthTools.Rebin(event)],
         "tags" : reco_tags,
     },
+
+     "Upstream Energy":
+    {
+        "name": "Upstream_Energy",
+        "title" : "Total Upstream Energy; Energy upstream of vertex (MeV); NEvents",
+        "binning" : [PlotConfig.UPSTREAM_BINNING],
+        "value_getter" : [lambda event: TruthTools.UpstreamEnergy(event)],
+        "tags" : reco_tags,
+    },
+
     "Inline Upstream Energy Weighted Position" :
     {
         "name": "InlineUpstream_WeightPos",
@@ -1283,7 +1302,7 @@ PLOT_SETTINGS= {
         "binning": [PlotConfig.ELECTRON_ENERGY_BINNING,
                     PlotConfig.ELECTRON_ENERGY_BINNING],
         "value_getter" :[ lambda event: event.mc_FSPartE[TruthTools.MostEnergeticParticle(event,111)]/1e3,
-                          lambda event: event.kin_cal.reco_E_e],
+                          lambda event: event.kin_cal.reco_E_lep],
         "tags" : resolution_tags,
         "cuts" : [skip_sys, lambda event: event.classifier.truth_class == "CCPi0" or event.classifier.truth_class == "NCPi0"] 
     },
@@ -1294,7 +1313,7 @@ PLOT_SETTINGS= {
         "binning": [PlotConfig.SHOWER_WIDTH_BINNING,
                     PlotConfig.ELECTRON_ENERGY_BINNING],
         "value_getter" :[ lambda event: event.prong_MedianPlaneShowerWidth[0],
-                          lambda event: event.kin_cal.reco_E_e],
+                          lambda event: event.kin_cal.reco_E_lep],
         "tags" : resolution_tags,
     },
     "Inline Vertex Study" :
@@ -1413,7 +1432,7 @@ PLOT_SETTINGS= {
         "title" : "Lepton Energy Theta; Reco Energy (GeV); Reco #theta (degree)",
         "binning" : [PlotConfig.EXCESS_ENERGY_FIT,
                      PlotConfig.EXCESS_ANGLE_BINNING],
-        "value_getter" : [lambda event: event.kin_cal.reco_E_e,lambda event: event.kin_cal.reco_theta_e],
+        "value_getter" : [lambda event: event.kin_cal.reco_E_lep,lambda event: event.kin_cal.reco_theta_e],
         "tags":reco_tags,
     },
     "Extra Energy Difference":
@@ -1603,8 +1622,8 @@ PLOT_SETTINGS= {
                      PlotConfig.LOW_RECOIL_BIN_Q3,
                      PlotConfig.EXCESS_ENERGY_BINNING,
                      PlotConfig.LOW_RECOIL_BIN_Q3],
-        "value_getter" : [lambda event: event.kin_cal.reco_E_e,lambda event: event.kin_cal.reco_P_lep*math.sin(event.kin_cal.reco_theta_lep_rad),
-                          lambda event: event.kin_cal.true_E_e,lambda event: event.kin_cal.true_P_lep*math.sin(event.kin_cal.true_theta_lep_rad)],
+        "value_getter" : [lambda event: event.kin_cal.reco_E_lep,lambda event: event.kin_cal.reco_P_lep*math.sin(event.kin_cal.reco_theta_lep_rad),
+                          lambda event: event.kin_cal.true_E_lep,lambda event: event.kin_cal.true_P_lep*math.sin(event.kin_cal.true_theta_lep_rad)],
         "tags":migration_tags,
     },
 
@@ -1727,6 +1746,272 @@ PLOT_SETTINGS= {
                           lambda event: (event.kin_cal.reco_visE-event.kin_cal.true_visE)/event.kin_cal.true_visE],
         "tags": reco_tags
     },
+        "Vertex Difference vs Inline Upstream Energy NCPiZero":
+    {
+        "name":"vtxDiff_inline_ncPiZero",
+        "title": "Vertex Difference vs Inline Upstream Energy; Reco - True Vtx; Inline Upstream Energy; d^{2}NEvents/dVdE",
+        "binning" : [PlotConfig.VERTEX_DIFF_BINNING, PlotConfig.UPSTREAM_INLINE_ENERGY_BINS_VS_VTEX],
+        "value_getter":[lambda event: TruthTools.vtxdiff_one(event, 'nc'),
+                        lambda event: event.UpstreamInlineEnergy],
+        "tags": reco_tags
+    },
+
+    "Psi*Ee vs Ee":
+    {
+        "name":"psi_times_ee_vs_ee",
+        "title": "Psi*Ee vs Electron Energy; Psi*Ee; Ee; d^{2}NEvents/dpEedEe",
+        "binning" : [PlotConfig.PSI_EE_VS_EE_BINS, PlotConfig.EE_VS_BINS],
+        "value_getter":[lambda event: TruthTools.psi_ee(event),
+                        lambda event: event.kin_cal.reco_E_lep],
+        "tags": reco_tags
+    },
+    "Energy Outside Cone vs Ee":
+    {
+        "name":"eOutside_vs_Ee",
+        "title": "Outside Cone Energy vs Electron Energy; Energy Outside; Ee; d^{2}NEvents/deOdEe",
+        "binning" : [PlotConfig.EOUTSIDE_VS_EE_BINS, PlotConfig.EE_VS_BINS],
+        "value_getter":[lambda event: event.ConeOutsideE()/1e3,
+                        lambda event: event.kin_cal.reco_E_lep],
+        "tags": reco_tags
+    },
+
+    "Inline Weighted vs Vertex Difference":
+    {
+        "name":"inline_vs_vtxDiff",
+        "title": "Inline Upstream Energy Weighted vs Vertex Difference; Weighted Inline Upstream Energy; Reco - True Vtx",
+        "binning": [PlotConfig.INLINE_W_BINNING_VS_VTX, PlotConfig.VERTEX_DIFF_BINNING_VS_INLINE],
+        "value_getter":[lambda event: event.UpstreamInlineEnergyWgtdPosMean,
+                        lambda event: TruthTools.vtxdiff(event)],
+        "tags": reco_tags
+    },
+
+    "True Theta vs t":
+    {
+        "name":"theta_vs_t",
+        "title": "True theta vs Momentum Transfer; Theta; t",
+        "binning": [PlotConfig.ELECTRON_ANGLE_BINNING, PlotConfig.T_BINS],
+        "value_getter": [lambda event: event.kin_cal.true_theta_e,
+                         lambda event: TruthTools.tDef1(event)],
+        "tags": reco_tags
+    },
+
+    "t vs Electron Energy":
+    {
+        "name":"t_vs_Ee",
+        "title": "t vs Electron Energy; t; Ee",
+        "binning": [PlotConfig.T_BINS, PlotConfig.ELECTRON_ENERGY_BINNING_VS],
+        "value_getter": [lambda event: TruthTools.tDef1(event),
+                         lambda event: event.kin_cal.reco_E_lep],
+        "tags": reco_tags
+    },
+
+    "t vs PiZero E":
+    {
+        "name":"t_vs_pion_E",
+        "title": "t vs PiZero Energy; t; PiZero E",
+        "binning":[PlotConfig.T_BINS, PlotConfig.ELECTRON_ENERGY_BINNING],
+        "value_getter": [lambda event: TruthTools.tDef1(event),
+                         lambda event: TruthTools.PiZeroE(event)],
+        "tags": migration_tags
+    },
+
+        "Ee and Eout vs Pion Energy":
+    {
+        "name" : "ee_EOut_vs_pionE",
+        "title" : "Electron Energy + Energy Outside Cone vs Pion Energy; Ee + EOutside; Pion Energy",
+        "binning" : [PlotConfig.ELECTRON_ENERGY_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING],
+        "value_getter" : [lambda event: TruthTools.EePlusEOut(event), lambda event: TruthTools.PiZeroE_diff(event)],
+        "tags" : reco_tags
+    },
+
+
+    "Total Upstream vs Inline Upstream":
+    {
+        "name" : "total_upstream_vs_inline",
+        "title" : "Diffractive Total Upstream Energy vs Inline Upstream Energy; Total; Inline",
+        "binning" : [PlotConfig.UPSTREAM_ENERGY_BINS_VS, PlotConfig.INLINE_UPSTREAM_ENERGY_BINS],
+        "value_getter" : [lambda event: TruthTools.diffUpstream(event), lambda event: event.UpstreamInlineEnergy],
+        "tags": reco_tags
+    },
+
+    "Inline Upstream vs t":
+    {
+        "name" : "inline_vs_t",
+        "title" : "Diffractive Inline Upstream Energy vs t; Inline Energy; t",
+        "binning" : [PlotConfig.INLINE_UPSTREAM_ENERGY_BINS, PlotConfig.T_BINS],
+        "value_getter" : [lambda event: event.UpstreamInlineEnergy, lambda event: TruthTools.tDiff(event)],
+        "tags" : reco_tags
+    },
+
+    "t vs Upstream Energy":
+    {
+        "name" : "t_vs_upstream",
+        "title" : "Diffractive t vs Upstream Energy; Upstream Energy; t",
+        "binning" : [PlotConfig.UPSTREAM_ENERGY_BINS_VS, PlotConfig.T_BINS],
+        "value_getter" : [lambda event: TruthTools.diffUpstream(event), lambda event: TruthTools.tDiff(event)],
+        "tags" : reco_tags
+    },
+
+    "Pion Transverse Momentum vs Electron Energy":
+    {
+        "name" : "pi0T_vs_Ee",
+        "title":"Pion Transverse Momentum vs Electron Energy; pT; Electron Energy; d^{2}NEvents/dpTdEe",
+        "binning" : [PlotConfig.PT_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING_VS],
+        "value_getter" : [lambda event: TruthTools.pTrans(event, 111), lambda event: event.kin_cal.reco_E_lep],
+        "tags": reco_tags
+    },
+
+    "Inline Upstream Energy vs t":
+    {
+        "name":"inline_upstream_vs_t",
+        "title": "Inline Upstream Energy vs t; Inline Upstream Energy; t; d^{2}NEvents/dtdE",
+        "binning" : [PlotConfig.INLINE_UPSTREAM_ENERGY_BINS, PlotConfig.T_BINS],
+        "value_getter" : [lambda event: event.UpstreamInlineEnergy,
+                          lambda event: TruthTools.tDef1(event)],
+        "tags": reco_tags
+    },
+
+    "Vertex Difference vs Inline Upstream Energy Coherent":
+    {
+        "name":"vtxDiff_inline_coherent",
+        "title": "Vertex Difference vs Inline Upstream Energy; Reco - True Vtx; Inline Upstream Energy; d^{2}NEvents/dVdE",
+        "binning" : [PlotConfig.VERTEX_DIFF_BINNING, PlotConfig.UPSTREAM_INLINE_ENERGY_BINS_VS_VTEX],
+        "value_getter":[lambda event: TruthTools.vtxdiff_one(event, 'coh'),
+                        lambda event: event.UpstreamInlineEnergy],
+        "tags": reco_tags
+    },
+
+    "Vertex Difference vs Inline Upstream Energy Diffractive":
+    {
+        "name":"vtxDiff_inline_diff",
+        "title": "Vertex Difference vs Inline Upstream Energy; Reco - True Vtx; Inline Upstream Energy; d^{2}NEvents/dVdE",
+        "binning" : [PlotConfig.VERTEX_DIFF_BINNING, PlotConfig.UPSTREAM_INLINE_ENERGY_BINS_VS_VTEX],
+        "value_getter":[lambda event: TruthTools.vtxdiff_one(event, 'diff'),
+                        lambda event: event.UpstreamInlineEnergy],
+        "tags": reco_tags
+    },
+       "Psi vs Electron Energy":
+    {
+        "name" : "psi_vs_electron_energy",
+        "title": "Psi vs Electron Energy; Psi; Electron Energy(GeV); d^{2}NEvents/dEedP",
+
+        "binning" : [PlotConfig.PSI_BINNING2 , PlotConfig.ELECTRON_ENERGY_BINNING_VS],
+        "value_getter" : [lambda event: event.Psi , lambda event: event.kin_cal.reco_E_lep],
+        "tags": reco_tags
+    },
+
+    "Inline Upstream vs Electron Energy":
+    {
+        "name" : "upstream_vs_ee",
+        "title": "Inline Upstream Energy vs Electron Energy; Inline Upstream Energy (MeV); Electron Energy (GeV); d^{2}NEvents/dInEdEe",
+        "binning" : [PlotConfig.INLINE_UPSTREAM_ENERGY_BINS, PlotConfig.ELECTRON_ENERGY_BINNING_VS],
+        "value_getter" : [lambda event: event.UpstreamInlineEnergy, lambda event: event.kin_cal.reco_E_lep],
+        "tags" : reco_tags
+    },
+
+    "Weighted Inline Upstream vs Electron Energy":
+    {
+        "name":"wInline_vs_ee",
+        "title":"Weighted Inline Upstream vs Electron Energy; Weighted Inline Upstream Energy (MeV); Electron Energy (GeV); d^{2}NEvents/DInEdEe",
+        "binning" : [PlotConfig.INLINE_W_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING],
+        "value_getter" : [lambda event: event.UpstreamInlineEnergyWgtdPosMean, lambda event: event.kin_cal.reco_E_lep],
+        "tags" : reco_tags
+    },
+
+    "Energy Outside vs Electron Energy":
+    {
+        "name" : "eout_vs_el_energy",
+        "title" : "Energy Outside Cone vs Electron Energy",
+        "binning" : [PlotConfig.OUTSIDE_ENERGY_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING_VS],
+        "value_getter" : [lambda event: event.ConeOutsideE()/1e3, lambda event: event.kin_cal.reco_E_lep],
+        "tags" : reco_tags
+    },
+
+    "Electron Energy vs Pion Energy":
+    {
+        "name" : "ee_vs_pionE",
+        "title" : "Diffractive Electron Energy vs Pion Energy; Electron Energy; Pion Energy",
+        "binning" : [PlotConfig.ELECTRON_ENERGY_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING_VS],
+        "value_getter" : [lambda event: event.kin_cal.reco_E_lep, lambda event: TruthTools.PiZeroE_diff(event)],
+        "tags" : reco_tags
+    },
+
+    "PiZeroE" : {
+        "name":"PiZeroE",
+        "title": "Pi Zero Energy;  PiZero E (GeV); dNEvents/dE_PiZeroE",
+        "binning": [PlotConfig.PION_ENERGY_BINNING],
+        "value_getter" : [lambda event: TruthTools.PiZeroE(event)],
+        "tags": reco_tags
+    },
+
+    "True Signal Pi Zero Energy" : {
+        "name":"true_pizeroE",
+        "title": "Pi Zero Energy;  PiZero E (GeV); dNEvents/dE_PiZeroE",
+        "binning": [PlotConfig.PION_ENERGY_BINNING],
+        "value_getter" : [lambda event: TruthTools.PiZeroE(event)],
+        "tags": truth_signal_tags
+    },
+    "tDef1":
+    {
+        "name":"tDef1",
+        "title": "Diffractive Momentum Transfer 1; t; dNEvents/dt",
+        "binning": [PlotConfig.T_BINS],
+        "value_getter" : [lambda event: TruthTools.tDef1(event)],
+        "tags": reco_tags
+    },
+
+    "True Signal t":
+    {
+        "name":"true_t",
+        "title": "Diffractive Momentum Transfer 1; t; dNEvents/dt",
+        "binning": [PlotConfig.T_BINS],
+        "value_getter" : [lambda event: TruthTools.tDef1(event)],
+        "tags": truth_signal_tags
+    },
+    "tDef1 Diffractive":
+    {
+        "name":"tDef1_diff",
+        "title": "Diffractive Momentum Transfer 1; t; dNEvents/dt",
+        "binning": [PlotConfig.T_BINS],
+        "value_getter" : [lambda event: TruthTools.tDef1_diff(event)],
+        "tags": reco_tags
+    },
+
+    "PiZero E Diffractive": {
+        "name":"PiZeroE_diffractive",
+        "title": "Diffractive Pi Zero Energy;  PiZero E (GeV); dNEvents/dE_PiZeroE",
+        "binning": [PlotConfig.PION_ENERGY_BINNING],
+        "value_getter" : [lambda event: TruthTools.PiZeroE_diff(event)],
+        "tags": reco_tags
+    },
+
+    "tDef2":
+    {
+        "name":"tDef2",
+        "title": "Diffractive Momentum Transfer 2; t; dNEvents/dt",
+        "binning": [PlotConfig.T_BINS],
+        "value_getter" : [lambda event: TruthTools.tDef2(event)],
+        "tags": reco_tags
+    },
+
+    "Pion Transverse Momentum":
+    {
+        "name":"pi_pTrans",
+        "title":"Pion Transverse Momentum",
+        "binning" : [PlotConfig.PT_BINNING],
+        "value_getter" : [lambda event: TruthTools.pTrans(event, 111)],
+        "tags": reco_tags
+    },
+
+    "Proton Transverse Momentum":
+    {
+        "name":"pro_pTrans",
+        "title":"Proton Transverse Momentum",
+        "binning" : [PlotConfig.PT_BINNING],
+        "value_getter" : [lambda event: TruthTools.pTrans(event, 2212)],
+        "tags": reco_tags
+    },
+
 }
 
 #like histfolio, connect related histograms together

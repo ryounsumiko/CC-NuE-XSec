@@ -212,7 +212,7 @@ class CVUniverse(ROOT.PythonMinervaUniverse, object):
         uie = self.GetDouble("UpstreamInlineEnergy")
         vtx = 0
         #vtx = sum(self.GetVecElem("Bined_UIE",i) for i in range(2))
-        vtx = self.GetDouble("recoil_energy_nonmuon_vtx50mm")
+        #vtx = self.GetDouble("recoil_energy_nonmuon_vtx50mm")
         return max(0,uie-vtx)
 
     # =============== collcetion of all recoil energy stuff.========

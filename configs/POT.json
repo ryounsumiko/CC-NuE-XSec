@@ -538,6 +538,7 @@
                 "playlist_location": "file_option/playlist_ccqenue_datame1A_nx_Sarah.txt"
             },
             "Had": {
+                "tree":"NuECCQE",
                 "total_POT": 9.600705331624606e+19,
                 "used_POT": 9.513150022896255e+19,
                 "playlist_location": "file_option/playlist_ccqenue_datame1A_nx_Had.txt"
@@ -561,6 +562,7 @@
                 "playlist_location": "file_option/playlist_ccqenue_mcme1A_xtalkon.txt"
             },
             "Had": {
+                "tree":"NuECCQE",
                 "used_POT": 0.0,
                 "playlist_location": "file_option/playlist_ccqenue_mcme1A_nx_Had.txt"
             },

@@ -282,7 +282,7 @@ CONSOLIDATED_ERROR_GROUPS_CONFIG = {
 
 
 CONSOLIDATED_ERROR_GROUPS = {
-    key:[e for group in CONSOLIDATED_ERROR_GROUPS_CONFIG[key] for e in itertools.chain.from_iterable(iter(group.values()))] for key in CONSOLIDATED_ERROR_GROUPS_CONFIG
+    key:[e for group in CONSOLIDATED_ERROR_GROUPS_CONFIG[key] for e in itertools.chain.from_iterable(iter(list(group.values())))] for key in CONSOLIDATED_ERROR_GROUPS_CONFIG
 }
 
 

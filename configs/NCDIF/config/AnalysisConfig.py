@@ -38,7 +38,7 @@ class _AnalysisConfig(object):
         params.update(kwargs)
 
         self._config_keys = set()
-        for key, value in params.items():
+        for key, value in list(params.items()):
             self._config_keys.add(key)
             setattr(self, key, value)
 

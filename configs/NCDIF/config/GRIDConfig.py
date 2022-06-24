@@ -32,11 +32,11 @@ PLAYLISTS = {
     ],
 
 }
-PLAYLISTS["FHC_BigNuE"] = list(map(lambda x:x.replace("nx","BigNuE"),PLAYLISTS["FHC"]))
-PLAYLISTS["RHC_BigNuE"] = list(map(lambda x:x.replace("nx","BigNuE"),PLAYLISTS["RHC"]))
+PLAYLISTS["FHC_BigNuE"] = list([x.replace("nx","BigNuE") for x in PLAYLISTS["FHC"]])
+PLAYLISTS["RHC_BigNuE"] = list([x.replace("nx","BigNuE") for x in PLAYLISTS["RHC"]])
 
-PLAYLISTS["FHC_NCDIF"] = list(map(lambda x:x.replace("nx","NCDIF"),PLAYLISTS["FHC"]))
-PLAYLISTS["FHC_Extended_2p2h"] = list(map(lambda x:x.replace("nx","ext_2p2h"),PLAYLISTS["FHC"]))
+PLAYLISTS["FHC_NCDIF"] = list([x.replace("nx","NCDIF") for x in PLAYLISTS["FHC"]])
+PLAYLISTS["FHC_Extended_2p2h"] = list([x.replace("nx","ext_2p2h") for x in PLAYLISTS["FHC"]])
 
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
