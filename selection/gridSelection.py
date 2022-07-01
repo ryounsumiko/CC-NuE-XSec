@@ -92,7 +92,8 @@ def submitJob( tupleName):
   #my_wrapper.write( "export XRD_LOGLEVEL=\"Debug\"\n")
 
   my_wrapper.write( "python eventSelection.py -p %s --grid --%s-only --ntuple_tag %s --count %d %d  --output $CONDOR_DIR_HISTS %s &> $CONDOR_DIR_LOGS/%s-${PROCESS}.log\n" % (playlist, dataSwitch, gridargs.ntuple_tag, start, count, argstring,tupleName) )
-  my_wrapper.write("exit $?\n")
+  my_wrapper.write("EXITCODE=$?; [[ $EXITCODE = 1  ]] && rm -f $CONDOR_DIR_HISTS/*.root\n") 
+  my_wrapper.write("exit $EXITCODE\n")
   #my_wrapper.write( "python eventSelection.py -p %s --grid --%s-only --ntuple_tag %s --count %d %d  --output $CONDOR_DIR_HISTS %s \n" % (playlist, dataSwitch, gridargs.ntuple_tag, start, count, argstring) )
  
   #addBashLine(my_wrapper,'date')

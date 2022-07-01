@@ -68,7 +68,7 @@ FRONT_DEDX_PI0_UPPERBOUND = 5
 PsiEe_CUT = 0.45
 
 TotalUpstream_CUT=120
-WeightedPos_CUT = 0.2
+UIE_WeightedPos_CUT = 0.2
 
 
 ############################################################################

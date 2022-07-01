@@ -198,11 +198,11 @@ CUT_CONFIGS = {
     },
     "UIEWeightedPos" : {
         "value_getter": lambda event,nprong: event.UpstreamInlineEnergyWgtdPosMean,
-        "cut_fn": lambda vals: vals > CutConfig.UIE_WeightedPos_Cut,
+        "cut_fn": lambda vals: vals > CutConfig.UIE_WeightedPos_CUT,
         "variable_range": [0.1*i for i in range(0,51)]
     },
     "TotalUpstream" : {
-        "value_getter": lambda event,nprong: 0,#sum(event.ExtraEnergyClusters_energy[i] for i in filter(lambda i:event.ExtraEnergyClusters_Z[i]<event.vtx[2], list(range(event.ExtraEnergyClusters_energy_sz)))),
+        "value_getter": lambda event,nprong: sum(event.ExtraEnergyClusters_energy[i] for i,z in enumerate(event.ExtraEnergyClusters_Z) if z < event.vtx[2]),
         "cut_fn": lambda vals: vals < CutConfig.TotalUpstream_CUT,
         "variable_range": [10*i for i in range(0,31)]
     },

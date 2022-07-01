@@ -8,9 +8,21 @@
 """
 import ROOT
 import math
-from config import PlotConfig,SignalDef
+from config import PlotConfig as pc
+from config import SignalDef
 from tools import TruthTools,Utilities
 
+#Return None instead of raise Error when PlotConfig attribute not found. Such that each configuration don't have to have same set of attributs.
+# All problem can be solved by another layer of indirection. :)
+class ConfigDummyLoader():
+    def __getattribute__(self,item):
+        try:
+            return pc.__getattribute__(item)
+        except AttributeError as e:
+            #print (e)
+            return None
+
+PlotConfig = ConfigDummyLoader()
 
 #tags are treated in MyHistograms.MakePlotProcessors
 # sideband: make the plot in sideband sample as well. Default is only signal sample
@@ -1792,7 +1804,7 @@ PLOT_SETTINGS= {
         "binning": [PlotConfig.ELECTRON_ANGLE_BINNING, PlotConfig.T_BINS],
         "value_getter": [lambda event: event.kin_cal.true_theta_e,
                          lambda event: TruthTools.tDef1(event)],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "t vs Electron Energy":
@@ -1802,7 +1814,7 @@ PLOT_SETTINGS= {
         "binning": [PlotConfig.T_BINS, PlotConfig.ELECTRON_ENERGY_BINNING_VS],
         "value_getter": [lambda event: TruthTools.tDef1(event),
                          lambda event: event.kin_cal.reco_E_lep],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "t vs PiZero E":
@@ -1815,13 +1827,13 @@ PLOT_SETTINGS= {
         "tags": migration_tags
     },
 
-        "Ee and Eout vs Pion Energy":
+    "Ee and Eout vs Pion Energy":
     {
         "name" : "ee_EOut_vs_pionE",
         "title" : "Electron Energy + Energy Outside Cone vs Pion Energy; Ee + EOutside; Pion Energy",
         "binning" : [PlotConfig.ELECTRON_ENERGY_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING],
         "value_getter" : [lambda event: TruthTools.EePlusEOut(event), lambda event: TruthTools.PiZeroE_diff(event)],
-        "tags" : reco_tags
+        "tags" : truth_tags
     },
 
 
@@ -1840,7 +1852,7 @@ PLOT_SETTINGS= {
         "title" : "Diffractive Inline Upstream Energy vs t; Inline Energy; t",
         "binning" : [PlotConfig.INLINE_UPSTREAM_ENERGY_BINS, PlotConfig.T_BINS],
         "value_getter" : [lambda event: event.UpstreamInlineEnergy, lambda event: TruthTools.tDiff(event)],
-        "tags" : reco_tags
+        "tags" : truth_tags
     },
 
     "t vs Upstream Energy":
@@ -1849,7 +1861,7 @@ PLOT_SETTINGS= {
         "title" : "Diffractive t vs Upstream Energy; Upstream Energy; t",
         "binning" : [PlotConfig.UPSTREAM_ENERGY_BINS_VS, PlotConfig.T_BINS],
         "value_getter" : [lambda event: TruthTools.diffUpstream(event), lambda event: TruthTools.tDiff(event)],
-        "tags" : reco_tags
+        "tags" : truth_tags
     },
 
     "Pion Transverse Momentum vs Electron Energy":
@@ -1868,7 +1880,7 @@ PLOT_SETTINGS= {
         "binning" : [PlotConfig.INLINE_UPSTREAM_ENERGY_BINS, PlotConfig.T_BINS],
         "value_getter" : [lambda event: event.UpstreamInlineEnergy,
                           lambda event: TruthTools.tDef1(event)],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "Vertex Difference vs Inline Upstream Energy Coherent":
@@ -1890,7 +1902,7 @@ PLOT_SETTINGS= {
                         lambda event: event.UpstreamInlineEnergy],
         "tags": reco_tags
     },
-       "Psi vs Electron Energy":
+    "Psi vs Electron Energy":
     {
         "name" : "psi_vs_electron_energy",
         "title": "Psi vs Electron Energy; Psi; Electron Energy(GeV); d^{2}NEvents/dEedP",
@@ -1933,7 +1945,7 @@ PLOT_SETTINGS= {
         "title" : "Diffractive Electron Energy vs Pion Energy; Electron Energy; Pion Energy",
         "binning" : [PlotConfig.ELECTRON_ENERGY_BINNING, PlotConfig.ELECTRON_ENERGY_BINNING_VS],
         "value_getter" : [lambda event: event.kin_cal.reco_E_lep, lambda event: TruthTools.PiZeroE_diff(event)],
-        "tags" : reco_tags
+        "tags" :truth_tags
     },
 
     "PiZeroE" : {
@@ -1941,7 +1953,7 @@ PLOT_SETTINGS= {
         "title": "Pi Zero Energy;  PiZero E (GeV); dNEvents/dE_PiZeroE",
         "binning": [PlotConfig.PION_ENERGY_BINNING],
         "value_getter" : [lambda event: TruthTools.PiZeroE(event)],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "True Signal Pi Zero Energy" : {
@@ -1957,7 +1969,7 @@ PLOT_SETTINGS= {
         "title": "Diffractive Momentum Transfer 1; t; dNEvents/dt",
         "binning": [PlotConfig.T_BINS],
         "value_getter" : [lambda event: TruthTools.tDef1(event)],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "True Signal t":
@@ -1974,7 +1986,7 @@ PLOT_SETTINGS= {
         "title": "Diffractive Momentum Transfer 1; t; dNEvents/dt",
         "binning": [PlotConfig.T_BINS],
         "value_getter" : [lambda event: TruthTools.tDef1_diff(event)],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "PiZero E Diffractive": {
@@ -1982,7 +1994,7 @@ PLOT_SETTINGS= {
         "title": "Diffractive Pi Zero Energy;  PiZero E (GeV); dNEvents/dE_PiZeroE",
         "binning": [PlotConfig.PION_ENERGY_BINNING],
         "value_getter" : [lambda event: TruthTools.PiZeroE_diff(event)],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "tDef2":
@@ -1991,7 +2003,7 @@ PLOT_SETTINGS= {
         "title": "Diffractive Momentum Transfer 2; t; dNEvents/dt",
         "binning": [PlotConfig.T_BINS],
         "value_getter" : [lambda event: TruthTools.tDef2(event)],
-        "tags": reco_tags
+        "tags": truth_tags
     },
 
     "Pion Transverse Momentum":
@@ -2011,7 +2023,6 @@ PLOT_SETTINGS= {
         "value_getter" : [lambda event: TruthTools.pTrans(event, 2212)],
         "tags": reco_tags
     },
-
 }
 
 #like histfolio, connect related histograms together

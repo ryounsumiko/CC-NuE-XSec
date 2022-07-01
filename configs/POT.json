@@ -653,6 +653,7 @@
                 "playlist_location": "file_option/playlist_ccqenue_datame1B_nx_LLR.txt"
             },
             "Had": {
+                "tree":"NuECCQE",
                 "playlist_location": "file_option/playlist_ccqenue_datame1B_nx_Had.txt"
             },
             "fspline": {
