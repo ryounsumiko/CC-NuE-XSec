@@ -140,7 +140,8 @@ class CVUniverse(ROOT.PythonMinervaUniverse, object):
         weight *=self.GetRPAWeight()
         weight *=self.GetMyLowQ2PiWeight()
         weight *= self.GetGeantHadronWeight()
-      
+        weight *= self.GetMyMinosEfficiencyWeight()
+
         # for _ in self.weighters:
         #     weight *= _()
         return weight
@@ -157,6 +158,13 @@ class CVUniverse(ROOT.PythonMinervaUniverse, object):
     def GetModelWeight(self):
         w = pcweight.GetModelWeight(self, 'Eel',"Pi0") # (Ee, Theta, ETh), (PCElectron, PCPhoton, PCPi0)
         return w
+
+    def GetMyMinosEfficiencyWeight(self):
+         if self.GetAnaToolName() != "MasterAnaDev" or self.HasNoBackExitingTracks:
+             return 1
+         else:
+             return self.GetMinosEfficiencyWeight()
+
 
 
 
@@ -462,6 +470,52 @@ class MuonUniverseMinerva(ROOT.PlotUtils.MuonUniverseMinerva(ROOT.PythonMinervaU
     @staticmethod
     def GetSystematicsUniverses(chain):
         return [MuonUniverseMinerva(chain,i) for i in OneSigmaShift]
+
+class MuonAngleXResolutionUniverse(ROOT.PlotUtils.MuonAngleXResolutionUniverse(ROOT.PythonMinervaUniverse),CVUniverse, object):
+    def __init__(self,chain,nsigma):
+        super(MuonAngleXResolutionUniverse,self).__init__(chain,nsigma)
+        super(ROOT.PlotUtils.MuonAngleXResolutionUniverse(ROOT.PythonMinervaUniverse),self).InitWithoutSuper(chain,nsigma)
+
+
+    @staticmethod
+    def GetSystematicsUniverses(chain):
+        return [MuonAngleXResolutionUniverse(chain,i) for i in OneSigmaShift]
+
+class MuonResolutionUniverse(ROOT.PlotUtils.MuonResolutionUniverse(ROOT.PythonMinervaUniverse),CVUniverse, object):
+    def __init__(self,chain,nsigma):
+        super(MuonResolutionUniverse,self).__init__(chain,nsigma)
+        super(ROOT.PlotUtils.MuonResolutionUniverse(ROOT.PythonMinervaUniverse),self).InitWithoutSuper(chain,nsigma)
+
+
+    @staticmethod
+    def GetSystematicsUniverses(chain):
+        return [MuonResolutionUniverse(chain,i) for i in OneSigmaShift]
+
+class MuonAngleYResolutionUniverse(ROOT.PlotUtils.MuonAngleYResolutionUniverse(ROOT.PythonMinervaUniverse),CVUniverse, object):
+    def __init__(self,chain,nsigma):
+        super(MuonAngleYResolutionUniverse,self).__init__(chain,nsigma)
+        super(ROOT.PlotUtils.MuonAngleYResolutionUniverse(ROOT.PythonMinervaUniverse),self).InitWithoutSuper(chain,nsigma)
+
+
+    @staticmethod
+    def GetSystematicsUniverses(chain):
+        return [MuonAngleYResolutionUniverse(chain,i) for i in OneSigmaShift]
+
+class MinosEfficiencyUniverse(ROOT.PlotUtils.MinosEfficiencyUniverse(ROOT.PythonMinervaUniverse),CVUniverse, object):
+    def __init__(self,chain,nsigma):
+        super(MinosEfficiencyUniverse,self).__init__(chain,nsigma)
+        super(ROOT.PlotUtils.MinosEfficiencyUniverse(ROOT.PythonMinervaUniverse),self).InitWithoutSuper(chain,nsigma)
+
+    def GetMyMinosEfficiencyWeight(self):
+         if self.GetAnaToolName() != "MasterAnaDev" or self.HasNoBackExitingTracks:
+             return 1
+         else:
+             return super(MinosEfficiencyUniverse,self).GetMinosEfficiencyWeight()
+
+
+    @staticmethod
+    def GetSystematicsUniverses(chain):
+        return [MinosEfficiencyUniverse(chain,i) for i in OneSigmaShift]
 
 
 class MuonUniverseMinos(ROOT.PlotUtils.MuonUniverseMinos(ROOT.PythonMinervaUniverse),CVUniverse, object):
@@ -803,8 +857,13 @@ def GetAllSystematicsUniverses(chain,is_data,is_pc =False,exclude=None,playlist=
                 #Electron angle universe
                 universes.extend(ElectronAngleShiftUniverse.GetSystematicsUniverses(chain ))
             elif abs(SystematicsConfig.AnaNuPDG)==14:
+                universes.extend(MinosEfficiencyUniverse.GetSystematicsUniverses(chain )) # Keep in mind that this is vertical too.
                 universes.extend(MuonUniverseMinerva.GetSystematicsUniverses(chain ))
                 universes.extend(MuonUniverseMinos.GetSystematicsUniverses(chain ))
+                universes.extend(MuonResolutionUniverse.GetSystematicsUniverses(chain ))
+                universes.extend(MuonAngleXResolutionUniverse.GetSystematicsUniverses(chain ))
+                universes.extend(MuonAngleYResolutionUniverse.GetSystematicsUniverses(chain ))
+
             else:
                 raise ValueError ("AnaNuPDG should be \pm 12 or 14, but you set {}".format(SystematicsConfig.AnaNuPDG))
 

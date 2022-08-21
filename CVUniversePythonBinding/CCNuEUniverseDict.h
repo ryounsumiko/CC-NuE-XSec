@@ -24,6 +24,10 @@
 #include "PlotUtils/SuSAFromValencia2p2hReweighter.h"
 #include "PlotUtils/TargetMassSystematics.h"
 #include "PlotUtils/TargetUtils.h"
+#include "PlotUtils/MinosEfficiencySystematics.h"
+#include "PlotUtils/MuonResolutionSystematics.h"
+
+
 
 template class PlotUtils::Model<PythonMinervaUniverse>;
 template class PlotUtils::Reweighter<PythonMinervaUniverse>;
@@ -49,6 +53,10 @@ template class PlotUtils::RPAUniverse<PythonMinervaUniverse>;
 template class PlotUtils::Universe2p2h<PythonMinervaUniverse>;
 template class PlotUtils::MuonUniverseMinerva<PythonMinervaUniverse>;
 template class PlotUtils::MuonUniverseMinos<PythonMinervaUniverse>;
+template class PlotUtils::MuonResolutionUniverse<PythonMinervaUniverse>;
+template class PlotUtils::MuonAngleXResolutionUniverse<PythonMinervaUniverse>;
+template class PlotUtils::MuonAngleYResolutionUniverse<PythonMinervaUniverse>;
+template class PlotUtils::MinosEfficiencyUniverse<PythonMinervaUniverse>;
 template class PlotUtils::TargetMassScintillatorUniverse<PythonMinervaUniverse>;
 template class PlotUtils::TargetMassWaterUniverse<PythonMinervaUniverse>;
 template class PlotUtils::TargetMassCarbonUniverse<PythonMinervaUniverse>;

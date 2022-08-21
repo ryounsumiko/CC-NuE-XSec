@@ -28,6 +28,13 @@ MNVPLOTTER.legend_text_size        = .03
 
 MNVPLOTTER.good_colors.pop_back()
 
+COLORS=ROOT.MnvColors.GetColors()
+MNVPLOTTER.error_color_map["Flux"]=COLORS[0]
+MNVPLOTTER.error_color_map["Detector model"]=COLORS[1]
+MNVPLOTTER.error_color_map["Interaction model"]=COLORS[2]
+MNVPLOTTER.error_color_map["Mnv Tunes"]=COLORS[3]
+MNVPLOTTER.error_color_map["Alternative Tunning methods"]=COLORS[4]
+
 CANVAS = ROOT.TCanvas("c2","c2",1600,1000)
 
 def Logx(canvas):
@@ -341,7 +348,6 @@ def MakeModelVariantPlot(data_hist, mc_hists, color=None, title=None,legend ="TR
     mnvplotter.DrawDataMCVariations(data_hist,TArray,pot_scale,legend,True,True,False,False,False)
 
 
-
 # def MakeDataMCStackedPlot(data_hist, mc_hists, legend = "TR", pot_scale=1.0, mnvplotter=MNVPLOTTER,canvas=CANVAS):
 #     if not mc_hists:
 #         raise KeyError("Doesn't make sense to plot stacked histogram without MC")
@@ -363,12 +369,14 @@ def MakeSignalDecomposePlot(data_hist, mc_hist, mc_hists, title, color, ratio = 
         tmp = mc_hist.Clone("clx")
         mc_hists = Ratio(mc_hists,tmp,"B")
         mc_hist = Ratio([mc_hist],tmp,"B")[0]
+        mc_hist.GetYaxis().SetTitle("Data/MC")
         #mc_hist.Sumw2()
         # plotting script has a bug (feature?) that the error band will span 0-1 if error is exactly 0. Set it to small value.
         for i in range(mc_hist.GetSize()):
             mc_hist.SetBinError(i,1e-10)
         if data_hist:
             data_hist = Ratio([data_hist],tmp)[0]
+            data_hist.GetYaxis().SetTitle("Data/MC")
         #del tmp
     if data_hist is not None:
         try:

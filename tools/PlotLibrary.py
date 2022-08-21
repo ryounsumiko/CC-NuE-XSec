@@ -370,6 +370,13 @@ VARIABLE_DICT = {
         "binning" : PlotConfig.ELECTRON_ENERGY_BINNING,
         "value_getter" : lambda event: event.kin_cal.reco_E_lep,
     },
+     "True Lepton Energy":
+    {
+        "name" : "tEel",
+        "title" : "True E_lep (GeV)", 
+        "binning" : PlotConfig.ELECTRON_ENERGY_BINNING,
+        "value_getter" : lambda event: event.kin_cal.true_E_lep,
+    },
     "Lepton Energy Neutrino-4":
     {
         "name" : "Eel_nu4",
@@ -543,6 +550,20 @@ VARIABLE_DICT = {
         "title" : "True Available Energy",
         "binning" : PlotConfig.LOW_RECOIL_BIN_Q0,
         "value_getter" : lambda event: event.kin_cal.true_visE,
+    },
+    "True Visible Energy Coarse":
+    {
+        "name" : "tEavail",
+        "title" : "True Available Energy",
+        "binning" : PlotConfig.LOW_RECOIL_BIN_Q0_COARSE,
+        "value_getter" : lambda event: event.kin_cal.true_visE,
+    },
+    "Visible Energy Coarse":
+    {
+        "name" : "Eavail",
+        "title" : "Available Energy",
+        "binning" : PlotConfig.LOW_RECOIL_BIN_Q0_COARSE,
+        "value_getter" : lambda event: event.kin_cal.reco_visE,
     },
     "Q0" :
     {

@@ -168,6 +168,9 @@ class MyWeighterBase(object):
         else:
             return 1
 
+    def weightTruth(self):
+        return False
+
 class DataWeight(MyWeighterBase):
     def __init__(self,fvalue=None):
         super(DataWeight,self).__init__(fvalue)
@@ -214,6 +217,8 @@ class RHCNewWeight(MyWeighterBase):
 class EnuElectronMuonWeight(DataWeight):
     def __init__(self):
         super(EnuElectronMuonWeight,self).__init__(lambda universe:universe.kin_cal.reco_E_nu_cal)
+        # self.f = ROOT.TFile.Open("{}/studies/flux_scale.root".format(os.environ["CCNUEROOT"]))
+        # self.h = self.f.Get("FHC")
         self.f = ROOT.TFile.Open("{}/studies/emu_scale3.root".format(os.environ["CCNUEROOT"]))
         self.h = self.f.Get("Enu")
         self.h.ClearAllErrorBands()
@@ -223,6 +228,17 @@ class EnuElectronMuonWeight(DataWeight):
 class EnuElectronMuonWeightTrue(DataWeight):
     def __init__(self):
         super(EnuElectronMuonWeightTrue,self).__init__(lambda universe:universe.kin_cal.true_enu_genie)
+        self.f = ROOT.TFile.Open("{}/studies/flux_scale.root".format(os.environ["CCNUEROOT"]))
+        self.h = self.f.Get("FHC")
+        self.h.ClearAllErrorBands()
+        self.weighter = partial(self.fileBasedWeight,hist=self.h)
+
+    def weightTruth(self):
+        return True
+
+class EnuElectronMuonWeightRaw(DataWeight):
+    def __init__(self):
+        super(EnuElectronMuonWeightRaw,self).__init__(lambda universe:universe.kin_cal.reco_E_nu_cal)
         self.f = ROOT.TFile.Open("{}/studies/flux_scale.root".format(os.environ["CCNUEROOT"]))
         self.h = self.f.Get("FHC")
         self.h.ClearAllErrorBands()
@@ -296,7 +312,7 @@ class PtTuningWeightAlt(MyWeighterBase):
         self.cate_map["CCNuE"] = partial(self.fileBasedWeight,hist=self.hist_dict["Signal"])
 
 
-class RHCEelPtTuningWeight(object):
+class RHCEelPtTuningWeight(MyWeighterBase):
     def __init__(self):
         self.EelWeight = RHCNewWeight()
         self.PtWeight = RHCPtTuningWeight()
@@ -304,7 +320,7 @@ class RHCEelPtTuningWeight(object):
     def GetWeight(self,universe):
         return self.EelWeight.GetWeight(universe)*self.PtWeight.GetWeight(universe)
 
-class FHCPtTuningWeight(object):
+class FHCPtTuningWeight(MyWeighterBase):
     def __init__(self):
         self.CVWeight = RHCEelPtTuningWeight()
         self.FHCWeight = PtTuningWeight()
@@ -315,7 +331,7 @@ class FHCPtTuningWeight(object):
     def GetWeight(self,universe):
         return self.CVWeight.GetWeight(universe)* (self.FHCWeight.GetWeight(universe) if self.cut(universe) else 1)
 
-class FHCPtTuningWeightAlt(object):
+class FHCPtTuningWeightAlt(MyWeighterBase):
     def __init__(self):
         self.RHCWeight = RHCEelPtTuningWeight()
         self.FHCWeight = PtTuningWeightAlt()
@@ -323,7 +339,7 @@ class FHCPtTuningWeightAlt(object):
     def GetWeight(self,universe):
         return self.RHCWeight.GetWeight(universe)*self.FHCWeight.GetWeight(universe)
 
-class RHCWrongSignBkgWeight(object):
+class RHCWrongSignBkgWeight(MyWeighterBase):
     def __init__(self):
         self.Wrongsign = RHCWrongSignEstimatorWeight() #rhc->fhc weight
         self.RHCPtWeight = WrongSignPtTuningWeight() #pi^0 weight
@@ -341,6 +357,8 @@ elif AnalysisConfig.extra_weighter =="emu_weight":
     MyWeighter = EnuElectronMuonWeight()
 elif AnalysisConfig.extra_weighter =="emu_true_weight":
     MyWeighter = EnuElectronMuonWeightTrue()
+elif AnalysisConfig.extra_weighter =="emu_raw_weight":
+    MyWeighter = EnuElectronMuonWeightRaw()
 elif AnalysisConfig.extra_weighter =="rhc_weight":
     MyWeighter = RHCNewWeight()
 elif AnalysisConfig.extra_weighter =="CV_tune":

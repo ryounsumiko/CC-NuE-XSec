@@ -64,7 +64,7 @@ RECO_VISE_RANGE = [0,1.2]
 
 
 WEXP_CUT = 2
-Reco_visEcut = 2
+Reco_visEcut = 1.2
 FRONT_DEDX_PI0_UPPERBOUND = 5
 
 
@@ -100,7 +100,7 @@ SAMPLE_CUTS = {
         "VertexTrackMultiplicity",
         # Pi0 rejection
         "MeanFrontdEdX",
-        #"Eavail"
+        "Eavail"
         #"LLR",
         #"Psi",
     ],
@@ -205,7 +205,7 @@ KINEMATICS_CUTS = [
     "LeptonEnergy",
     "LeptonAngle",
     #"NeutrinoEnergy",
-    # "Pt",
+    "Pt",
     # "Eavail"
 
 ]

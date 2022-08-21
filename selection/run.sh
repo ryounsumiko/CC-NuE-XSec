@@ -1,5 +1,5 @@
 #12.5 include 50 Mev bin , 12.6 without
-stag="col14.3"
+stag="electron_bkgtuned"
 ntag="MAD"
 #tarball="/pnfs/minerva/resilient/tarballs/hsu-gridselection-macro$(date +%H%M%S).tar.gz"
 tarball="/minerva/data/users/hsu/tarballs/hsu-gridselection-macro$(date +%H%M%S).tar.gz"
@@ -18,6 +18,6 @@ python gridSelection.py $common_flag --NCDIF --count 5
 #extended 2p2h sample
 python gridSelection.py $common_flag --ext_2p2h --truth --count 2
 #signal rich sample
-python gridSelection.py $common_flag --bignue --truth --count 2
+#python gridSelection.py $common_flag --bignue --truth --count 2
 #echo python gridSelection.py $common_flag
 python gridSelection.py $common_flag --skip_2p2h --truth

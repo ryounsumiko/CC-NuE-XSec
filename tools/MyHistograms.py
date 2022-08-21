@@ -222,7 +222,7 @@ def MakePlotProcessors(**kwargs):
         if kwargs["mc"]:
             for plot in plots:
                 plot.AddCut(lambda universe: universe.classifier.is_true_signal)
-                plot.weight_function = lambda event:event.GetWeight(TRUE_SIGNAL_WEIGHTED)
+                plot.weight_function = lambda event:event.GetWeight(event.pcweighter.weightTruth())
         else:
             print("cant't make signal only plots for data")
             return plots

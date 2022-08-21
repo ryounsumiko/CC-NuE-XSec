@@ -59,11 +59,11 @@ NEUTRINO_ENERGY_RANGE = [0, 100] # in GeV.
 ELECTRON_ANGLE_RANGE = [0, 20] # in deg
 RECO_Q3_RANGE = [0,1.2]
 TRUE_Q3_RANGE = [0,1.2]
-RECO_PT_RANGE = [0,1.0]
+RECO_PT_RANGE = [0,1.6]
 RECO_VISE_RANGE = [0,1.2]
 
 WEXP_CUT = 2
-Reco_visEcut = 2
+Reco_visEcut = 1.2
 FRONT_DEDX_PI0_UPPERBOUND = 5
 
 
@@ -195,6 +195,7 @@ SAMPLE_CUTS = {
         "Vertex_Z",
         "Vertex_Apothem",
         "Neutrino Helicity",
+        "Eavail"
      ]
 }
 
@@ -203,8 +204,8 @@ KINEMATICS_CUTS = [
     "LeptonAngle",
     #"NeutrinoEnergy",
     #"Q3",
-    # "Pt",
-    # "Eavail"
+    "Pt",
+    #"Eavail"
 ]
 #######################################
 

@@ -45,7 +45,7 @@ LOW_RECOIL_BIN_Q0_Truth = [0,0.05]+[ 0.1*i for i in range(1,7)]+[0.2*i for i in 
 #LOW_RECOIL_BIN_Q0 = [0.05 * i for i in range(25)]#,0.05,0.1,0.12,0.16,0.24,0.32,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2]
 # LOW_RECOIL_BIN_Q0_Truth = [0.0, 0.08, 0.16,0.32,0.60, 1.00, 1.2]
 LOW_RECOIL_BIN_Q0 = LOW_RECOIL_BIN_Q0_Truth#[0.0,0.04,0.08,0.12,0.16,0.24,0.32,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2]
-
+LOW_RECOIL_BIN_Q0_COARSE = [0.2*i for i in range(7)]
 
 RESOLUTION_BINNING = [-1.0+0.1*i for i in range(41)]
 
@@ -255,6 +255,51 @@ HISTS_TO_MAKE = [
     {"variables":["Visible Energy","Lepton Pt"],
      "tags": {"sideband","truth_class"},
      },
+    {"variables":["Neutrino Energy","Visible Energy Coarse"],
+     "tags": {"sideband","truth_class"},
+     },
+    {"variables":["True Neutrino Energy","True Visible Energy Coarse"],
+     "tags": {"sideband","truth_class","mc_only"},
+     },
+    {"variables":["Neutrino Energy","True Visible Energy Coarse"],
+     "tags": {"sideband","truth_class","mc_only"},
+     },
+    {"variables":["True Neutrino Energy","Visible Energy Coarse"],
+     "tags": {"sideband","truth_class","mc_only"},
+     },
+     {"variables":["Neutrino Energy","Lepton Pt"],
+      "tags": {"sideband","truth_class"},
+      #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+     {"variables":["True Neutrino Energy","Lepton Pt"],
+      "tags": {"sideband","truth_class","mc_only"},
+      #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+     {"variables":["Neutrino Energy","True Lepton Pt"],
+      "tags": {"sideband","truth_class","mc_only"},
+      #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+    {"variables":["True Neutrino Energy","True Lepton Pt"],
+     "tags": {"sideband","truth_class","mc_only"},
+     #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+     {"variables":["Lepton Energy","Lepton Pt"],
+      "tags": {"sideband","truth_class"},
+      #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+     {"variables":["True Lepton Energy","Lepton Pt"],
+      "tags": {"sideband","truth_class","mc_only"},
+      #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+     {"variables":["Lepton Energy","True Lepton Pt"],
+      "tags": {"sideband","truth_class","mc_only"},
+      #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+    {"variables":["True Lepton Energy","True Lepton Pt"],
+     "tags": {"sideband","truth_class","mc_only"},
+     #"cuts":[ lambda event :event.kin_cal.true_visE<1.2]
+     },
+    
     #  {"variables":["NuEFuzz Muon","Lepton Pt"],
     #  "tags":{"sideband","truth_class","mc_only"},
     #  },
