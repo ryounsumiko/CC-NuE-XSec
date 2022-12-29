@@ -46,6 +46,7 @@ PLOTPATH = "/minerva/data/users/{}/numunueRatioPlots/".format(os.environ["USER"]
 
 DRAW_SYSTEMATICS = True
 fluxbin = array('d',[0.5*i for i in range(4,21)]+[i for i in range(11,21)])
+MNVUNFOLD = UnfoldUtils.MnvUnfold()
 
 # Matching signal channels. format:
 # ("category name used in numu sample", "category name used in nue sample","category name in plot name")
@@ -138,6 +139,7 @@ SYSTEMATIC_ERROR_GROUPS = {
     ]
 }
 
+ITERATIONS = [1, 4, 10, 15]
 
 def relativePOT(nue_true_signal,nue_true_signal_bignue,nue_POT):
     f = lambda hist:hist.GetEntries()
@@ -285,7 +287,11 @@ def GetEfficiencyCorrection():
 
 def GetEfficiency(hist_name,is_muon,is_reco_weight):
     Feff = ROOT.TFile.Open("eff_corr_scale.root")
-    name = "{}_eff_{}".format(hist_name,"mu" if is_muon else "e")
+    if is_reco_weight:
+        tmpname = hist_name
+    else:
+        tmpname = hist_name.replace("Eavail","tEavail").replace("Lepton_Pt","tLepton_Pt").replace("q3","tQ3")
+    name = "{}_eff_{}".format(tmpname,"mu" if is_muon else "e")
     htemp = Feff.Get(name)
     Feff.Close()
     return htemp
@@ -296,16 +302,35 @@ def myRebin(hist,binning):
         h2.Fill(hist.GetXaxis().GetBinCenter(i),hist.GetBinContent(i))
     return h2
 
+def getFileAndPOT(filename):
+    POT = Utilities.getPOTFromFile(filename)
+    f = ROOT.TFile.Open(filename)
+    return f,POT
+
+def DrawUnfoldedByIteration(mnvplotter,*args,canvas=PlotTools.CANVAS):
+    leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
+    #print(len(args),len(ITERATIONS))
+    args[0].SetMaximum(2)
+    for i,it in enumerate(ITERATIONS):
+        hist = args[i]
+        hist.SetLineColor(PlotTools.COLORS[i])
+        hist.Draw("E1 SAME")
+        leg.AddEntry(hist,"iteration {}".format(it))
+    leg.Draw()
+    line =ROOT.TLine()
+    line.SetLineStyle(2)
+    line.SetLineWidth(3)
+    line.SetLineColor(36)
+    line.DrawLine(0,1.0,args[0].GetXaxis().GetBinLowEdge(args[0].GetSize()-1),1.0)
+
 def MakeCompPlot():
-    def getFileAndPOT(filename):
-        POT = Utilities.getPOTFromFile(filename)
-        f = ROOT.TFile.Open(filename)
-        return f,POT
+
 
     def DrawTWRW(mnvplotter,*args,canvas=PlotTools.CANVAS):
         rw = args[0]
         tw = args[1]
         e = args[2] if len(args)>2 else None
+        hdata = args[3] if len(args)>3 else None
         leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
 
         m = max(map(lambda h: h.GetMaximum(),[h for h in args if h is not None])) * 1.1
@@ -317,10 +342,15 @@ def MakeCompPlot():
 
         rw.SetLineColor(ROOT.kGreen)
         tw.SetLineColor(ROOT.kBlue)
-        if e:
+        if hdata:
+            hdata.SetLineColor(ROOT.kBlack)
+            hdata.Draw("E1 SAME")
+            leg.AddEntry(hdata,"numu Data rw")
+        elif e:
             e.SetLineColor(ROOT.kRed)
             e.Draw("HIST SAME")
             leg.AddEntry(e,"nue MC")
+       
         tw.Draw("HIST SAME")
         leg.AddEntry(tw,"numu MC tw")
         rw.Draw("HIST SAME")
@@ -438,7 +468,13 @@ def MakeCompPlot():
         h1.AddMissingErrorBandsAndFillWithCV(h2)
         h2.AddMissingErrorBandsAndFillWithCV(h1)
         h = cast(h1)
+        # s = h.GetVertErrorBand("bkg_tune")
+        # print(s.GetBinContent(6),s.GetHist(0).GetBinContent(6),s.GetHist(1).GetBinContent(6))
+        # s = h2.GetVertErrorBand("bkg_tune")
+        # print(s.GetBinContent(6),s.GetHist(0).GetBinContent(6),s.GetHist(1).GetBinContent(6))
         h.Divide(h,cast(h2))
+        # s = h.GetVertErrorBand("bkg_tune")
+        # print(s.GetBinContent(6),s.GetHist(0).GetBinContent(6),s.GetHist(1).GetBinContent(6))
         mnvplotter.DrawErrorSummary(h)
 
     def DrawRatiosOnSamePlot(mnvplotter,h1,h2,h3,h4,include_systematics = DRAW_SYSTEMATICS):
@@ -455,6 +491,11 @@ def MakeCompPlot():
         hp.GetYaxis().SetTitle("#nu_{#mu}/#nu_{e}")
         mnvplotter.axis_maximum = 2.0
         mnvplotter.DrawDataMCWithErrorBand(h,hp,1.0,"TR",False,ROOT.nullptr,ROOT.nullptr,False,True)
+        line =ROOT.TLine()
+        line.SetLineStyle(2)
+        line.SetLineWidth(3)
+        line.SetLineColor(36)
+        line.DrawLine(0,1.0,h1.GetXaxis().GetBinLowEdge(h1.GetSize()-1),1.0)
         mnvplotter.axis_maximum = -1111
 
 
@@ -524,6 +565,7 @@ def MakeCompPlot():
     numuMCrawfile,numuMCrawDataPOT = getFileAndPOT(numufile)
     numuTrueWeightedfile,numuTrueWeightedPOT = getFileAndPOT(numuTrueweightedfile["mc"])
     print (nueMCPOT,numuDataPOT,numuMCPOT,nueDataPOT)
+    PlotTools.updatePlotterErrorGroup(SYSTEMATIC_ERROR_GROUPS)
 
 
     #DrawExample
@@ -555,12 +597,19 @@ def MakeCompPlot():
             sc = he.Integral()/hmu.Integral()
         #     hmu.Scale(sc)
         Slicer = PlotTools.Make2DSlice if he.GetDimension()==2 else (lambda hist : [hist])
-        # if hedata:
-        #     PlotTools.MakeGridPlot(Slicer,DrawRatio,[hedata,he],draw_seperate_legend = he.GetDimension()==2)
-        #     PlotTools.CANVAS.Print("{}{}_heratio.png".format(PLOTPATH,hist_name))
-        # if hmudata:
-        #     PlotTools.MakeGridPlot(Slicer,DrawRatio,[hmudata,hmu],draw_seperate_legend = hmu.GetDimension()==2)
-        #     PlotTools.CANVAS.Print("{}{}_hmuratio.png".format(PLOTPATH,hist_name))
+        if hedata:
+            PlotTools.MakeGridPlot(Slicer,DrawRatio,[hedata,he],draw_seperate_legend = he.GetDimension()==2)
+            PlotTools.CANVAS.Print("{}{}_heratio.png".format(PLOTPATH,hist_name))
+            PlotTools.MakeGridPlot(Slicer,lambda mnvplotter, h :mnvplotter.DrawErrorSummary(h),[hedata],draw_seperate_legend = he.GetDimension()==2)
+            PlotTools.CANVAS.Print("{}{}_e_error.png".format(PLOTPATH,hist_name))
+
+
+        if hmudata:
+            PlotTools.MakeGridPlot(Slicer,DrawRatio,[hmudata,hmu],draw_seperate_legend = hmu.GetDimension()==2)
+            PlotTools.CANVAS.Print("{}{}_hmuratio.png".format(PLOTPATH,hist_name))
+            PlotTools.MakeGridPlot(Slicer,lambda mnvplotter, h :mnvplotter.DrawErrorSummary(h),[hmudata],draw_seperate_legend = hmu.GetDimension()==2)
+            PlotTools.CANVAS.Print("{}{}_mu_error.png".format(PLOTPATH,hist_name))
+
 
         # if hedata and hmudata:
         #     PlotTools.MakeGridPlot(Slicer,DrawDoubleRatio,[hedata,he,hmudata,hmu],draw_seperate_legend = he.GetDimension()==2)
@@ -575,11 +624,12 @@ def MakeCompPlot():
         # PlotTools.MakeGridPlot(Slicer,DrawRatio,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
         # PlotTools.CANVAS.Print("{}{}_MCratio.png".format(PLOTPATH,hist_name))
 
-        PlotTools.updatePlotterErrorGroup(SYSTEMATIC_ERROR_GROUPS)
+        #PlotTools.updatePlotterErrorGroup(SYSTEMATIC_ERROR_GROUPS)
 
         if hist_name in ["Eavail_q3","Eavail_Lepton_Pt"]:#,"tEavail_tQ3","tEavail_tLepton_Pt","Enu","tEnu"]:
             thist_name = hist_name
-           # print(thist_name)
+            # print(thist_name)
+            fout = ROOT.TFile.Open("recoeffcor_xsec_{}.root".format(hist_name),"RECREATE")
             for reco_weighted in [True]:#,False]:
                 eff_mu = GetEfficiency(thist_name,True,reco_weighted)
                 eff_e = GetEfficiency(thist_name,False,reco_weighted)
@@ -601,6 +651,15 @@ def MakeCompPlot():
                         continue
                     for e in ERROR_BANDS_TO_POP:
                         h.PopVertErrorBand(e)
+
+                fout.cd()
+                if hedata:
+                    hedatatemp.Write("hedata")
+                if hmudata:
+                    hmudatatemp.Write("hmudata")
+                hmutemp.Write("hmuMC")
+                hetemp.Write("heMC")
+
                 if hedata and hmudata:
                     PlotTools.MakeGridPlot(Slicer,Draw,[hetemp,hmutemp,hedatatemp,hmudatatemp],draw_seperate_legend = he.GetDimension()==2)
                 else:
@@ -638,23 +697,28 @@ def MakeCompPlot():
         #     PlotTools.MakeGridPlot(Slicer,drawer,[he,hmu],draw_seperate_legend = he.GetDimension()==2)
         #     PlotTools.CANVAS.Print("{}{}_{}MCratio.png".format(PLOTPATH,hist_name,numu_sig))
 
-        # titles = []
-        # mu_cates = []
-        # e_cates = []
-        # colors = []
-        # for i,v  in enumerate(SIGNAL_CHANNEL_PAIR):
-        #     (numu_sig,nue_sig,title) = v
-        #     titles.append(title)
-        #     e_cates.append(nue_sig)
-        #     mu_cates.append(numu_sig)
-        #     colors.append(COLORS[i])
-        # Fraction_e = GetFractions(nueMCsignalfile,e_cates,hist_name)
-        # Fraction_mu = GetFractions(numuMCfile,mu_cates,hist_name)
-        # drawer = partial(DrawFraction,titles=titles,colors=colors)
-        # PlotTools.MakeGridPlot(Slicer,drawer,Fraction_e,draw_seperate_legend = he.GetDimension()==2)
-        # PlotTools.CANVAS.Print("{}{}_MCfractionE.png".format(PLOTPATH,hist_name))
-        # PlotTools.MakeGridPlot(Slicer,drawer,Fraction_mu,draw_seperate_legend = he.GetDimension()==2)
-        # PlotTools.CANVAS.Print("{}{}_MCfractionMU.png".format(PLOTPATH,hist_name))
+        titles = []
+        mu_cates = []
+        e_cates = []
+        tw_cates = []
+        colors = []
+        for i,v  in enumerate(SIGNAL_CHANNEL_PAIR):
+            (numu_sig,nue_sig,title) = v
+            titles.append(title)
+            e_cates.append(nue_sig)
+            mu_cates.append(numu_sig)
+            tw_cates.append(numu_sig)
+            colors.append(COLORS[i])
+        Fraction_e = GetFractions(nueMCsignalfile,e_cates,hist_name)
+        Fraction_mu = GetFractions(numuMCfile,mu_cates,hist_name)
+        Fraction_tw =  GetFractions(numuTrueWeightedfile,mu_cates,hist_name)
+        drawer = partial(DrawFraction,titles=titles,colors=colors)
+        PlotTools.MakeGridPlot(Slicer,drawer,Fraction_e,draw_seperate_legend = he.GetDimension()==2)
+        PlotTools.CANVAS.Print("{}{}_MCfractionE.png".format(PLOTPATH,hist_name))
+        PlotTools.MakeGridPlot(Slicer,drawer,Fraction_mu,draw_seperate_legend = he.GetDimension()==2)
+        PlotTools.CANVAS.Print("{}{}_MCfractionMU.png".format(PLOTPATH,hist_name))
+        PlotTools.MakeGridPlot(Slicer,drawer,Fraction_tw,draw_seperate_legend = he.GetDimension()==2)
+        PlotTools.CANVAS.Print("{}{}_MCfractionTW.png".format(PLOTPATH,hist_name))
 
 
     #draw efficiency:
@@ -670,6 +734,10 @@ def MakeCompPlot():
         PlotTools.CANVAS.Print("{}{}_efficiency.png".format(PLOTPATH,i[0]))
         PlotTools.MakeGridPlot(Slicer,DrawEfficiency,[hes[0],hes[2],hmus[0],hmus[2]],draw_seperate_legend = twoD)
         PlotTools.CANVAS.Print("{}{}_recoefficiency.png".format(PLOTPATH,i[0]))
+        PlotTools.MakeGridPlot(Slicer,DrawErrorRatio,[hes[0],hes[2]],draw_seperate_legend = twoD)
+        PlotTools.CANVAS.Print("{}{}_recoefficiency_e_error.png".format(PLOTPATH,i[0]))
+        PlotTools.MakeGridPlot(Slicer,DrawErrorRatio,[hmus[0],hmus[2]],draw_seperate_legend = twoD)
+        PlotTools.CANVAS.Print("{}{}_recoefficiency_mu_error.png".format(PLOTPATH,i[0]))
 
         #draw example:
         hmued = GetSignalHist(numuTrueWeightedfile,MU_SIGNALS,i[2])
@@ -682,6 +750,13 @@ def MakeCompPlot():
         hmuen_rw.Scale(numuDataPOT/numuMCPOT,"width")
         hmur_rw = GetSignalHist(numuMCfile,MU_SIGNALS,i[0])
         hmur_rw.Scale(numuDataPOT/numuMCPOT,"width")
+        hmudata_rw = numuDatafile.Get(i[0])
+        if hmudata_rw:
+            hmudata_rw.Scale(numuDataPOT/numuDataPOT,"width")
+            hmubkg = GetSignalHist(numuMCfile,MU_BACKGROUNDS,i[0])
+            hmubkg.Scale(numuDataPOT/numuMCPOT,"width")
+            SubtractPoissonHistograms(hmudata_rw,hmubkg)
+
         her = GetSignalHist(nueMCsignalfile,E_SIGNALS,i[0])
         her.Scale(numuDataPOT/nueMCsignalPOT,"width")
         heen = GetSignalHist(nueMCsignalfile,E_SIGNALS,i[1])
@@ -693,10 +768,15 @@ def MakeCompPlot():
         PlotTools.CANVAS.Print("{}{}_twrw.png".format(PLOTPATH,i[1]))
         PlotTools.MakeGridPlot(Slicer,DrawTWRW,[hmur_rw,hmur,her],draw_seperate_legend = twoD)
         PlotTools.CANVAS.Print("{}{}_twrw.png".format(PLOTPATH,i[0]))
+        if hmudata_rw:
+            PlotTools.MakeGridPlot(Slicer,DrawTWRW,[hmur_rw,hmur,hmudata_rw,hmudata_rw],draw_seperate_legend = twoD)
+            PlotTools.CANVAS.Print("{}{}_datatwrw.png".format(PLOTPATH,i[0]))
         PlotTools.MakeGridPlot(Slicer,DrawStages,[hmued,hmuen,hmur],draw_seperate_legend = twoD)
         PlotTools.CANVAS.Print("{}{}_stages_mu.png".format(PLOTPATH,i[0]))
         PlotTools.MakeGridPlot(Slicer,DrawStages,[heed,heen,her],draw_seperate_legend = twoD)
         PlotTools.CANVAS.Print("{}{}_stages_e.png".format(PLOTPATH,i[0]))
+        
+        
 
     for i in ["tEnu_tEavail","Enu_tEavail", "tEnu_Eavail","Enu_Eavail",
               "tEnu_tLepton_Pt","Enu_tLepton_Pt","tEnu_Lepton_Pt","Enu_Lepton_Pt",
@@ -710,6 +790,7 @@ def MakeCompPlot():
         Slicer = PlotTools.Make2DSlice
         PlotTools.MakeGridPlot(Slicer,DrawTWRW,[hmu_rw,hmu_tw,he],draw_seperate_legend = True)
         PlotTools.CANVAS.Print("{}{}_twrw.png".format(PLOTPATH,i))
+     
 
 
     #ad-hoc
@@ -733,14 +814,14 @@ def MakeFluxWeight():
     filepath = "/cvmfs/minerva.opensciencegrid.org/minerva/CentralizedFluxAndReweightFiles/MATFluxAndReweightFiles/flux/flux-gen2thin-pdg{}{}-minervame{}_rearrangedUniverses.root"
     FHC = ("","1D1M1NWeightedAve")
     RHC = ("-","6A")
-    Fout = ROOT.TFile.Open("flux_scale.root","RECREATE")
+    Fout = ROOT.TFile.Open("flux_scalep.root","RECREATE")
     for p in [FHC,RHC]:
         fe = ROOT.TFile.Open(filepath.format(p[0],12,p[1]))
         he = fe.Get("flux_E_cvweighted")
-        he = he.Rebin(len(fluxbin)-1,"he_rebin",fluxbin)
+        #he = he.Rebin(len(fluxbin)-1,"he_rebin",fluxbin)
         fmu = ROOT.TFile.Open(filepath.format(p[0],14,p[1]))
         hmu = fmu.Get("flux_E_cvweighted")
-        hmu = hmu.Rebin(len(fluxbin)-1,"hmu_rebin",fluxbin)
+        #hmu = hmu.Rebin(len(fluxbin)-1,"hmu_rebin",fluxbin)
         he.Divide(he,hmu)
         Fout.cd()
         he.Write("FHC" if not p[0] else "RHC")
@@ -805,10 +886,241 @@ def MakeScaleFile3():
     fflux.Close()
     Fout.Close()
 
+def XsecRatioByUnfolding():
+    nueMCfile,nueMCPOT = getFileAndPOT(nuefile)
+    nueMCsignalfile,nueMCsignalPOT = getFileAndPOT(nuesignalrichfile)
+    nueMCsignalPOT = relativePOT(nueMCfile.Get("Eavail_q3_true_signal"),nueMCsignalfile.Get("Eavail_q3_true_signal"),nueMCPOT)
+    nueBkgfile,nueBkgPOT = getFileAndPOT(nuebkgtunedfile)
+    numuMCfile,numuMCPOT = getFileAndPOT(numuweightedfile["mc"])
+    numuDatafile,numuDataPOT = getFileAndPOT(numuweightedfile["data"])
+    nueDatafile,nueDataPOT = getFileAndPOT(nuedatafile)
+    numuMCrawfile,numuMCrawDataPOT = getFileAndPOT(numufile)
+    numuTrueWeightedfile,numuTrueWeightedPOT = getFileAndPOT(numuTrueweightedfile["mc"])
+    fout = ROOT.TFile.Open("unfoled_xsec_ratio.root","RECREATE")
+    for hist in ["Eavail_Lepton_Pt","Eavail_q3"]:
+        migration_mu = numuTrueWeightedfile.Get(hist+"_migration")
+        migration_e = nueMCsignalfile.Get(hist+"_migration")
+        efficiency_e = GetEfficiency(hist,False,False)
+        efficiency_mu = GetEfficiency(hist,True,False)
+        hmudata = numuDatafile.Get(hist)
+        if hmudata:
+            hmudata.Scale(numuDataPOT/numuDataPOT)
+            hmubkg = GetSignalHist(numuMCfile,MU_BACKGROUNDS,hist)
+            hmubkg.Scale(numuDataPOT/numuMCPOT)
+            SubtractPoissonHistograms(hmudata,hmubkg)
+        hedata = nueDatafile.Get(hist)
+        if hedata:
+            hedata.Scale(numuDataPOT/nueDataPOT)
+            hebkg = GetSignalHist(nueBkgfile,E_BACKGROUNDS,hist)
+            hebkg.Scale(numuDataPOT/nueBkgPOT)
+            SubtractPoissonHistograms(hedata,hebkg)
+        hists = []
+        for iteration in ITERATIONS:
+            ratio, hmu, he = UnfoldingRatio(hmudata,migration_mu,hedata,migration_e,iteration,efficiency_mu,efficiency_e,hist)
+            fout.cd()
+            ratio.Write("unfolded_ratio_{}_iter_{}".format(hist,iteration))
+            hmu.Write("unfolded_hmu_{}_iter_{}".format(hist,iteration))
+            he.Write("unfolded_he_{}_iter_{}".format(hist,iteration))
+            hists.append(ratio)
+        draw_function = DrawUnfoldedByIteration
+        PlotTools.MakeGridPlot(PlotTools.Make2DSlice,draw_function,hists,draw_seperate_legend = True)
+        PlotTools.CANVAS.Print("{}{}_unfolded_ratio2.png".format(PLOTPATH,hist))
+
+
+
+
+def UnfoldingRatio(hmu,migration_mu,he,migration_e,iteration,efficiency_mu,efficiency_e,hist):
+    def Draw(mnvplotter,*args,canvas=PlotTools.CANVAS):
+        mc_hist1 = args[0]
+        mc_hist2 = args[1]
+        data_hist1 = args[2] if len(args)>2 else None
+        data_hist2 = args[3] if len(args)>3 else None
+        leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
+        # if data_hist:
+        #     data_hist.Draw("E1 X0")
+
+        # for h in args:
+        #     if h is None:
+        #         continue
+        #     h.GetXaxis().SetRange(1,h.GetNbinsX()+1)
+
+        m = max(map(lambda h: h.GetMaximum(),[h for h in args if h is not None])) * 1.1
+        for h in args:
+            if h is None:
+                continue
+            h.SetLineWidth(3)
+            h.SetMaximum(m)
+
+
+        # if data_hist1:
+        #     #data_hist1.SetTitle("nue Data")
+        #     data_hist1.SetLineColor(ROOT.kRed+2)
+        #     # data_hist1.SetMaximum(m)
+        #     # data_hist1.SetLineWidth(3)
+        #     #data_hist1.GetXaxis().SetRangeUser(0,data_hist1.GetNbinsX()+1)
+        #     #data_hist1.SetMarkerColor(ROOT.kRed)
+        #     data_hist1.Draw("SAME")
+        #     leg.AddEntry(data_hist1,"nue data")
+        # if data_hist2:
+        #     #data_hist2.SetTitle("numu Data")
+        #     data_hist2.SetLineColor(ROOT.kGreen-2)
+        #     #data_hist2.SetMarkerColor(ROOT.kGreen)
+        #     # data_hist2.SetMaximum(m)
+        #     # data_hist2.SetLineWidth(3)
+        #     #data_hist2.GetXaxis().SetRangeUser(0,data_hist2.GetNbinsX()+1)
+        #     data_hist2.Draw("SAME")
+        #     leg.AddEntry(data_hist2,"weighted numu data")
+        if mc_hist1:
+            #mc_hist1.SetTitle("nue MC")
+            mc_hist1.SetLineColor(ROOT.kRed)
+            # mc_hist1.SetMaximum(m)
+            # mc_hist1.SetLineWidth(3)
+            #mc_hist1.GetXaxis().SetRangeUser(0,mc_hist1.GetNbinsX()+1)
+            mc_hist1.Draw("HIST E1 SAME")
+            leg.AddEntry(mc_hist1,"nue Data")
+        if mc_hist2:
+            #mc_hist2.SetTitle("weighted numu MC")
+            mc_hist2.SetLineColor(ROOT.kGreen)
+            # mc_hist2.SetMaximum(m)
+            # mc_hist2.SetLineWidth(3)
+            #mc_hist2.GetXaxis().SetRangeUser(0,mc_hist2.GetNbinsX()+1)
+            mc_hist2.Draw("HIST E1 SAME")
+            leg.AddEntry(mc_hist2,"weighted numu Data")
+        leg.Draw()
+
+    hmu_unfold = efficiency_mu.Clone()
+    cov = ROOT.TMatrixD(1,1)
+    migration_mu.AddMissingErrorBandsAndFillWithCV(hmu)
+    MNVUNFOLD.UnfoldHistoWithFakes(hmu_unfold,cov,migration_mu,hmu,ROOT.nullptr,ROOT.nullptr,ROOT.nullptr,iteration,True,True)
+    migration_e.AddMissingErrorBandsAndFillWithCV(he)
+
+    he_unfold = efficiency_e.Clone()
+    MNVUNFOLD.UnfoldHistoWithFakes(he_unfold,cov,migration_e,he,ROOT.nullptr,ROOT.nullptr,ROOT.nullptr,iteration,True,True)
+    PlotTools.MakeGridPlot(PlotTools.Make2DSlice,Draw,[hmu_unfold,he_unfold],draw_seperate_legend = True)
+    PlotTools.CANVAS.Print("{}{}_unfolded_iter_{}.png".format(PLOTPATH,hist,iteration))
+
+    hmu_unfold.AddMissingErrorBandsAndFillWithCV(efficiency_mu)
+    efficiency_mu.AddMissingErrorBandsAndFillWithCV(hmu_unfold)
+    hmu_unfold.Divide(hmu_unfold,efficiency_mu)
+    he_unfold.AddMissingErrorBandsAndFillWithCV(efficiency_e)
+    efficiency_e.AddMissingErrorBandsAndFillWithCV(he_unfold)
+    he_unfold.Divide(he_unfold,efficiency_e)
+
+    unfold_ratio = hmu_unfold.Clone()
+    unfold_ratio.AddMissingErrorBandsAndFillWithCV(he_unfold)
+    he_unfold.AddMissingErrorBandsAndFillWithCV(hmu_unfold)
+    unfold_ratio.Divide(unfold_ratio,he_unfold)
+    return unfold_ratio, hmu_unfold, he_unfold
+
+def CompareUnfoldedandRecoEffcor():
+    def Draw(mnvplotter,*args,canvas=PlotTools.CANVAS):
+        leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
+        m = max(map(lambda h: h.GetMaximum(),[h for h in args if h is not None])) * 1.1
+        for h in args:
+            if h is None:
+                continue
+            h.SetLineWidth(3)
+            h.SetMaximum(m)
+        for i,hist in enumerate(args):
+            hist.SetLineColor(PlotTools.COLORS[i])
+            hist.Draw("E1 SAME")
+            if i == 0:
+                leg.AddEntry(hist,"recoeff corrected")
+            else:
+                leg.AddEntry(hist,"Unfolded")
+        leg.Draw()
+
+    def DrawRatio(mnvplotter,*args,canvas=PlotTools.CANVAS):
+        leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
+        for h in args:
+            if h is None:
+                continue
+            h.SetLineWidth(3)
+            h.SetMaximum(2)
+            h.SetMinimum(0)
+            h.GetYaxis().SetTitle("#nu_{#mu}/#nu_{e}")
+        for i,hist in enumerate(args):
+            hist.SetLineColor(PlotTools.COLORS[i])
+            hist.Draw("E1 SAME")
+            if i == 0:
+                leg.AddEntry(hist,"recoeff corrected")
+            else:
+                leg.AddEntry(hist,"Unfolded")
+        leg.Draw()
+        line =ROOT.TLine()
+        line.SetLineStyle(2)
+        line.SetLineWidth(3)
+        line.SetLineColor(36)
+        line.DrawLine(0,1.0,args[0].GetXaxis().GetBinLowEdge(args[0].GetSize()-1),1.0)
+
+    def DrawErrorBand(mnvplotter, hist, canvas=PlotTools.CANVAS):
+        leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
+        hist.Draw("E1 SAME")
+        leg.AddEntry(hist, "CV")
+        h0 = hist.GetVertErrorBand("bkg_tune").GetHist(0)
+        h0.SetLineColor(PlotTools.COLORS[1])
+        h0.Draw("HIST SAME")
+        leg.AddEntry(h0, "Enhance diffractive")
+        h1 = hist.GetVertErrorBand("bkg_tune").GetHist(1)
+        h1.SetLineColor(PlotTools.COLORS[2])
+        h1.Draw("HIST SAME")
+        leg.AddEntry(h1, "Enhance non-coherent")
+        leg.Draw()
+
+
+
+    def DrawErrorRatio(mnvplotter,h1,h2,include_systematics = DRAW_SYSTEMATICS,ratio_title = None):
+        cast = (lambda x:x) if include_systematics else (lambda x:x.GetCVHistoWithStatError())
+        h1.AddMissingErrorBandsAndFillWithCV(h2)
+        h2.AddMissingErrorBandsAndFillWithCV(h1)
+        h = cast(h1)
+        h.Divide(h,cast(h2))
+        mnvplotter.DrawErrorSummary(h)
+
+    PlotTools.updatePlotterErrorGroup(SYSTEMATIC_ERROR_GROUPS)
+    funfold = ROOT.TFile.Open("unfoled_xsec_ratio.root")
+    for hist_name in ["Eavail_Lepton_Pt"]:
+        feffcor = ROOT.TFile.Open("recoeffcor_xsec_{}.root".format(hist_name))
+        for nu_type in ["e","mu"]:
+            hist = []
+            hist.append(feffcor.Get("h{}data".format(nu_type)))
+            for i in ITERATIONS:
+                hist.append(funfold.Get("unfolded_h{}_{}_iter_{}".format(nu_type,hist_name,i)))
+                hist[-1].Scale(1.0,"width")
+            PlotTools.MakeGridPlot(PlotTools.Make2DSlice,Draw,hist,draw_seperate_legend = True)
+            PlotTools.CANVAS.Print("{}h{}unfolded_comparison_{}.png".format(PLOTPATH, nu_type,hist_name))
+        recoeffcor = feffcor.Get("hmudata")
+        recoeffcor_e = feffcor.Get("hedata")
+        recoeffcor.AddMissingErrorBandsAndFillWithCV(recoeffcor_e)
+        recoeffcor_e.AddMissingErrorBandsAndFillWithCV(recoeffcor)
+        recoeffcor.Divide(recoeffcor,recoeffcor_e)
+        for e in ERROR_BANDS_TO_POP:
+            recoeffcor.PopVertErrorBand(e)
+
+        for i in ITERATIONS:
+            h = funfold.Get("unfolded_ratio_{}_iter_{}".format(hist_name,i))
+            hmu = funfold.Get("unfolded_hmu_{}_iter_{}".format(hist_name,i))
+            he = funfold.Get("unfolded_he_{}_iter_{}".format(hist_name,i))
+            for e in ERROR_BANDS_TO_POP:
+                h.PopVertErrorBand(e)
+                hmu.PopVertErrorBand(e)
+                he.PopVertErrorBand(e)
+            PlotTools.MakeGridPlot(PlotTools.Make2DSlice,DrawErrorRatio,[hmu,he],draw_seperate_legend = True)
+            PlotTools.CANVAS.Print("{}ratio_error_{}_iter{}.png".format(PLOTPATH,hist_name,i))
+            hist = [recoeffcor.GetCVHistoWithError(),h.GetCVHistoWithError()]
+            PlotTools.MakeGridPlot(PlotTools.Make2DSlice,DrawRatio,hist,draw_seperate_legend = True)
+            PlotTools.CANVAS.Print("{}ratio_unfolded_comparison_{}_iter{}.png".format(PLOTPATH,hist_name,i))
+            PlotTools.MakeGridPlot(PlotTools.Make2DSlice, DrawErrorBand, [he], draw_seperate_legend = True)
+            PlotTools.CANVAS.Print("{}{}_he_errorband_iter{}.png".format(PLOTPATH,hist_name,i))
+
+        feffcor.Close()
+    
+
 if __name__ == "__main__":
-    MakeCompPlot()
-    #MakeScaleFile(["Enu","tEnu","tEnu_true_signal"])
+    #MakeCompPlot()
+    #MakeScaleFile(["Enu","tEnu","tEnu_true_signal"]) 
     #GetEfficiencyCorrection()
     #MakeFluxWeight()
-    #MakeScaleFile3()
-
+    #MakeScaleFile3
+    #XsecRatioByUnfolding()
+    CompareUnfoldedandRecoEffcor()

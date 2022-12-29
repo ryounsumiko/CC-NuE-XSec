@@ -49,7 +49,7 @@ class KinematicsCalculator(object):
             setattr(self, kw, val)
 
         self._clear = False
-        self.new_truth = False
+        self.new_truth = True
         self.Clear()
         self.Cals = [self.Clear]
         if self.calc_reco:

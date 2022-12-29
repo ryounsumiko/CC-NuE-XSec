@@ -348,6 +348,14 @@ class RHCWrongSignBkgWeight(MyWeighterBase):
     def GetWeight(self,universe):
         return self.Wrongsign.GetWeight(universe)* self.RHCPtWeight.GetWeight(universe)* self.RHCEelWeight.GetWeight(universe)
 
+class FHCAveTuningWeight(MyWeighterBase):
+    def __init__(self):
+        self.weight0 = FHCPtTuningWeight()
+        self.weight1 = FHCPtTuningWeightAlt()
+
+    def GetWeight(self,universe):
+        return (self.weight0.GetWeight(universe)+self.weight1.GetWeight(universe))/2
+
 
 if AnalysisConfig.extra_weighter is None:
     MyWeighter = MyWeighterBase()
@@ -362,7 +370,7 @@ elif AnalysisConfig.extra_weighter =="emu_raw_weight":
 elif AnalysisConfig.extra_weighter =="rhc_weight":
     MyWeighter = RHCNewWeight()
 elif AnalysisConfig.extra_weighter =="CV_tune":
-    MyWeighter = RHCEelPtTuningWeight()
+    MyWeighter = FHCAveTuningWeight()
 elif AnalysisConfig.extra_weighter =="FHCPt_tune2":
     MyWeighter = FHCPtTuningWeight()
 elif AnalysisConfig.extra_weighter =="FHCPt_tune1":

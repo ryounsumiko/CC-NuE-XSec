@@ -138,7 +138,7 @@ if __name__ == "__main__":
     if not scale_file:
         scale_file = mc_file
         print ("Didn't find scale file. using mc file instead")
-    signal_rich_file = ROOT.TFile.Open(AnalysisConfig.SelectionHistoPath(re.sub("-tune[0-9]","",playlist)+"-BigNuE",False)) if USE_BIGNUE else None
+    signal_rich_file = ROOT.TFile.Open(AnalysisConfig.SelectionHistoPath(re.sub("-tune[0-9]","",playlist)+"_BigNuE",False)) if USE_BIGNUE else None
     if not signal_rich_file:
         signal_rich_file = mc_file
         print ("Didn't find signal rich file, using mc file instead")

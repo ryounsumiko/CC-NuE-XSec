@@ -1130,5 +1130,20 @@
                 "playlist_location": "file_option/playlist_ccqenue_datame6J_nx_MAD.txt"
             }
         }
+    },
+    "MADtest": {
+        "mc" : {
+            "p2" : {
+                "playlist_location": "file_option/playlist_mad_p2.txt"
+               },
+            "p3" : {
+                "playlist_location": "file_option/playlist_mad_p3.txt"
+               }
+         },
+	"data" : {
+            "p3": {
+                "playlist_location": "file_option/playlist_mad_p3_data.txt"
+               }
+         }
     }
 }

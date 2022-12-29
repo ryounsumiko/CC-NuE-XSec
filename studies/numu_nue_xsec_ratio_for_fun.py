@@ -135,27 +135,27 @@ def forfun():
 
 def compXsec():
     def Draw(mnvplotter,he,hmu,hmuME,*mc):
-        m = max(map(lambda h: h.GetMaximum(),[he,hmu,hmuME])) * 1.1
+        m = max(map(lambda h: h.GetMaximum(),[he,hmuME])) * 1.1
         leg = ROOT.TLegend(0.5,0.7,0.8,0.9).Clone()
         he.SetLineColor(ROOT.kRed+2)
         he.SetMaximum(m)
         he.Draw("E1 SAME")
         leg.AddEntry(he,"#nu_{e} ME","LE")
-        hmu.SetLineColor(ROOT.kGreen-2)
-        #hmu.SetMaximum(m)
-        hmu.SetMarkerStyle(1)
-        hmu.Draw("E1 SAME")
-        leg.AddEntry(hmu,"#nu_{#mu} LE","LE")
+        # hmu.SetLineColor(ROOT.kGreen-2)
+        # #hmu.SetMaximum(m)
+        # hmu.SetMarkerStyle(1)
+        # hmu.Draw("E1 SAME")
+        # leg.AddEntry(hmu,"#nu_{#mu} LE","LE")
         hmuME.SetLineColor(ROOT.kBlue-2)
         #hmu.SetMaximum(m)
         hmuME.SetMarkerStyle(1)
         hmuME.Draw("E1 SAME")
         leg.AddEntry(hmuME,"#nu_{#mu} ME","LE")
-        colors = ROOT.MnvColors.GetColors()
-        for i,h in enumerate(mc):
-            h.SetLineColor(colors[i])
-            h.Draw("HIST C SAME")
-            leg.AddEntry(h,DrawMC[i],"L")
+        # colors = ROOT.MnvColors.GetColors()
+        # for i,h in enumerate(mc):
+        #     h.SetLineColor(colors[i])
+        #     h.Draw("HIST C SAME")
+        #     leg.AddEntry(h,DrawMC[i],"L")
         leg.Draw()
     nuefile = ROOT.TFile.Open("/minerva/data/users/hsu/nu_e/xsec_meFHC_col13.3_MAD.root")
     numufile = ROOT.TFile.Open("/minerva/data/users/hsu/numu_xsec_LE.root")
@@ -170,6 +170,9 @@ def compXsec():
         hists.append(numuMCfile.Get(i).Clone(i))
     PlotTools.MakeGridPlot(PlotTools.Make2DSlice,Draw,hists,draw_seperate_legend=True)
     PlotTools.Print("Eavail_q3_xseccomp")
+    # for h in [hmuME,he]:
+    #     print("{}x{}".format(h.GetNbinsX(),h.GetNbinsY()))
+    chi2 = hmuME.KolmogorovTest(he,"")
 
 def GetLEXsec():
     f = ROOT.TFile.Open("/minerva/data/users/hsu/numu_xsec_LE.root","RECREATE")
